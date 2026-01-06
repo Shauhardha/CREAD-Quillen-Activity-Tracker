@@ -1,0 +1,80 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build outputs
+build/
+out/
+
+# Vite / cache
+.vite/
+
+# Environment files (may contain secrets)
+.env
+.env.*
+/.env.local
+
+# AWS Amplify generated config (may contain keys)
+src/aws-exports.js
+aws-exports.js
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Database files
+*.sqlite3
+*.db
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+
+# Mac/Windows
+.DS_Store
+Thumbs.db
+
+# Logs and coverage
+.coverage
+coverage.xml
+nosetests.xml
+pytest_cache/
+
+# IDEs
+.idea/
+.vscode/
+.mvn/
+
+# node debug
+*npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*

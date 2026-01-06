@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global default for checkboxes: white box, gray border, rounded, and white accent */
+@layer base {
+  input[type="checkbox"] {
+    @apply bg-white border border-gray-300 w-4 h-4 rounded accent-white;
+  }
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+
