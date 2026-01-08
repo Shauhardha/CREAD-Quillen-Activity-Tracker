@@ -19,8 +19,6 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user
     data = payload.dict()
     lead_ids = data.pop("lead_staff_ids", [])
 
-    # <-- Add print here to see incoming lead IDs
-    print("lead_ids from payload (create):", lead_ids)
 
     # still block legacy field
     data.pop("lead_staff_id", None)
@@ -32,6 +30,7 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user
         db_user = db.query(User).filter(User.cognito_sub == sub).first()
         if db_user:
             activity.created_by = db_user.id
+            activity.updated_by = db_user.id
 
     if lead_ids:
         leads = db.query(User).filter(User.id.in_(lead_ids)).all()
@@ -40,8 +39,6 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user
     db.add(activity)
     db.commit()
     db.refresh(activity)
-
-    print("Activity.leads after commit (create):", [u.id for u in activity.leads])
 
     return activity
 
@@ -96,10 +93,12 @@ def update_activity(id: int, payload: ActivityCreate, db: Session = Depends(get_
 
     # set updated_by from authenticated user (map cognito sub -> users.id)
     sub = user.get("sub") if user else None
+    print("Cognito sub from token:", sub)
     if sub:
         db_user = db.query(User).filter(User.cognito_sub == sub).first()
         if db_user:
             activity.updated_by = db_user.id
+            print("User ID:", db_user.id)
 
     db.commit()
     db.refresh(activity)

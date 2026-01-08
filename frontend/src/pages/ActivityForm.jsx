@@ -143,24 +143,61 @@ export default function ActivityManager() {
     setForm(f => ({ ...f, location_id: "" }));
   }, [county, state, accessToken]);
 
+//   useEffect(() => {
+//     if (skipCascadeRef.current) return;
+
+//     if (!state || !county || !city) {
+//       setForm(f => ({ ...f, location_id: "" }));
+//       return;
+//     }
+
+//     fetch(`${API_BASE}/locations/id?state=${state}&county=${encodeURIComponent(county)}&city=${encodeURIComponent(city)}`, {
+//       headers: { Authorization: `Bearer ${accessToken}` },
+//     })
+//       .then(r => r.json())
+//       .then(data => {
+//         const id = data?.id || "";
+//         setForm(f => ({ ...f, location_id: id }));
+//       })
+//       .catch(() => setForm(f => ({ ...f, location_id: "" })));
+//   }, [city, county, state, accessToken]);
+
   useEffect(() => {
     if (skipCascadeRef.current) return;
 
     if (!state || !county || !city) {
-      setForm(f => ({ ...f, location_id: "" }));
-      return;
+        setForm(f => ({ ...f, location_id: "" }));
+        return;
     }
 
-    fetch(`${API_BASE}/locations/id?state=${state}&county=${encodeURIComponent(county)}&city=${encodeURIComponent(city)}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then(r => r.json())
-      .then(data => {
-        const id = data?.id || "";
+    const headers = { Authorization: `Bearer ${accessToken}` };
+
+    // console.log("Fetching location ID for:", { state, county, city }); // DEBUG
+
+    fetch(`${API_BASE}/locations/id?state=${encodeURIComponent(state)}&county=${encodeURIComponent(county)}&city=${encodeURIComponent(city)}`, { headers })
+        .then(r => {
+        // console.log("Location ID response status:", r.status); // DEBUG
+        if (!r.ok) {
+            console.error("Location ID fetch failed:", r.status);
+            throw new Error(`HTTP ${r.status}`);
+        }
+        return r.json();
+        })
+        .then(data => {
+        // console.log("Location ID raw response:", data); // DEBUG
+        const id = data?.id ?? data; // Handle both {id: 5826} or just 5826
+        // console.log("Setting location_id to:", id);
         setForm(f => ({ ...f, location_id: id }));
-      })
-      .catch(() => setForm(f => ({ ...f, location_id: "" })));
-  }, [city, county, state, accessToken]);
+        })
+        .catch(err => {
+        console.error("Location ID error:", err);
+        setError("Could not find location ID - check spelling or add location to DB");
+        setForm(f => ({ ...f, location_id: "" }));
+        // console.log(form.location_id); // DEBUG
+        });
+    }, [city, county, state, accessToken]);
+
+  
 
   /* Close lead dropdown on outside click */
   useEffect(() => {
@@ -202,17 +239,24 @@ export default function ActivityManager() {
       funding_source_id: form.funding_source_id ? Number(form.funding_source_id) : null,
       location_id: form.location_id ? Number(form.location_id) : null,
     };
+    // console.log("Payload being sent:", payload);
 
     const method = editingId ? "PUT" : "POST";
     const url = editingId ? `${API_BASE}/activities/${editingId}` : `${API_BASE}/activities/`;
 
+    // authentication token
+    const { tokens } = await fetchAuthSession();
+    if (!tokens?.idToken) throw new Error("Not authenticated");
+
+    const headers = {
+    Authorization: `Bearer ${tokens.idToken.toString()}`,
+    "Content-Type": "application/json"
+    };
+
     try {
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -327,23 +371,23 @@ export default function ActivityManager() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow space-y-6 text-sm">
         <h2 className="text-2xl font-bold">{editingId ? "Edit Activity" : "Create New Activity"}</h2>
         {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
         {/* Title & Description */}
-        <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="w-full border p-3 rounded" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full border p-3 rounded h-32" />
+        <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="w-full border p-2 rounded" />
+        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full border p-2 rounded h-22" />
 
         {/* Initiative */}
-        <select name="initiative_id" value={form.initiative_id} onChange={handleChange} required className="w-full border p-3 rounded">
+        <select name="initiative_id" value={form.initiative_id} onChange={handleChange} required className="w-full border p-2 rounded">
           <option value="">Select Initiative</option>
           {initiatives.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
         </select>
 
         {/* Lead Staff Dropdown */}
         <div className="relative">
-          <button type="button" onClick={() => setShowLeads(!showLeads)} className="w-full border p-3 rounded text-left flex justify-between items-center">
+          <button type="button" onClick={() => setShowLeads(!showLeads)} className="w-full border p-2 rounded text-left flex justify-between items-center">
             <span>{form.lead_staff_ids.length ? `${form.lead_staff_ids.length} lead(s) selected` : "Select Lead Staff"}</span>
             <span>▼</span>
           </button>
@@ -365,57 +409,57 @@ export default function ActivityManager() {
         </div>
 
         {/* Status & Dates */}
-        <select name="status" value={form.status} onChange={handleChange} className="w-full border p-3 rounded">
+        <select name="status" value={form.status} onChange={handleChange} className="w-full border p-2 rounded">
           <option value="planned">Planned</option>
           <option value="in_progress">In Progress</option>
           <option value="completed">Completed</option>
         </select>
 
         <div className="grid grid-cols-2 gap-4">
-          <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required className="border p-3 rounded" />
-          <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required className="border p-3 rounded" />
+          <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required className="border p-2 rounded" />
+          <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required className="border p-2 rounded" />
         </div>
 
         {/* Location Cascade */}
-        <select value={state} onChange={e => setState(e.target.value)} required className="w-full border p-3 rounded">
+        <select value={state} onChange={e => setState(e.target.value)} required className="w-full border p-2 rounded">
           <option value="">Select State</option>
           {states.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
-        <select value={county} onChange={e => setCounty(e.target.value)} disabled={!state} required className="w-full border p-3 rounded">
+        <select value={county} onChange={e => setCounty(e.target.value)} disabled={!state} required className="w-full border p-2 rounded">
           <option value="">Select County</option>
           {counties.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        <select value={city} onChange={e => setCity(e.target.value)} disabled={!county} required className="w-full border p-3 rounded">
+        <select value={city} onChange={e => setCity(e.target.value)} disabled={!county} required className="w-full border p-2 rounded">
           <option value="">Select City</option>
           {cities.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
 
         {/* Other Dropdowns */}
-        <select name="education_level_id" value={form.education_level_id} onChange={handleChange} className="w-full border p-3 rounded">
+        <select name="education_level_id" value={form.education_level_id} onChange={handleChange} className="w-full border p-2 rounded">
           <option value="">Education Level (Optional)</option>
           {educationLevels.map(e => <option key={e.id} value={e.id}>{e.level_name}</option>)}
         </select>
 
-        <select name="partnership_type_id" value={form.partnership_type_id} onChange={handleChange} className="w-full border p-3 rounded">
+        <select name="partnership_type_id" value={form.partnership_type_id} onChange={handleChange} className="w-full border p-2 rounded">
           <option value="">Partnership Type (Optional)</option>
           {partnershipTypes.map(p => <option key={p.id} value={p.id}>{p.type_name}</option>)}
         </select>
 
-        <select name="funding_source_id" value={form.funding_source_id} onChange={handleChange} className="w-full border p-3 rounded">
+        <select name="funding_source_id" value={form.funding_source_id} onChange={handleChange} className="w-full border p-2 rounded">
           <option value="">Funding Source (Optional)</option>
           {fundingSources.map(f => <option key={f.id} value={f.id}>{f.source_name}</option>)}
         </select>
 
-        <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="w-full border p-3 rounded h-32" />
+        <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="w-full border p-2 rounded h-24" />
 
         <div className="flex gap-4">
-          <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700">
+          <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">
             {editingId ? "Update Activity" : "Create Activity"}
           </button>
           {editingId && (
-            <button type="button" onClick={resetForm} className="flex-1 bg-gray-400 text-white py-3 rounded">
+            <button type="button" onClick={resetForm} className="flex-1 bg-gray-400 text-white py-2 rounded">
               Cancel
             </button>
           )}
@@ -423,7 +467,7 @@ export default function ActivityManager() {
       </form>
 
       {/* Activities List */}
-      <div className="bg-white p-8 rounded-xl shadow">
+      <div className="bg-white p-8 rounded-xl shadow text-sm">
         <h2 className="text-2xl font-bold mb-6">Current Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities yet.</p>

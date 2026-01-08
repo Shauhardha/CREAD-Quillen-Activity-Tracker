@@ -1,3 +1,4 @@
+# app/models/activities.py
 from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP
 from app.database import Base
 from sqlalchemy.orm import relationship
