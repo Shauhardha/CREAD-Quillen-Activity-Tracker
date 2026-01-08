@@ -1,130 +1,29 @@
-import { useState, useEffect } from "react";
-import { getCurrentUser, signOut, fetchAuthSession } from "aws-amplify/auth";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { getCurrentUser, signOut } from "aws-amplify/auth";
 
 import CustomAuthenticator from "./pages/customAuthenticator";
-import AddUserForm from "./pages/UserManagement"; 
+import AuthenticatedLayout from "./layouts/AuthenticatedLayout";
+
+import AddUserForm from "./pages/UserManagement";
 import InitiativesManager from "./pages/InitiativesManager";
+import PartnershipTypes from "./pages/PartnershipTypes";
+import FundingSourcesManager from "./pages/FundingSourcesManager";
+import EducationLevelsManager from "./pages/EducationLevelsManager";
+import CulturalWealthTagsManager from "./pages/CulturalWealthTagsManager";
+import StrategicGoalsManager from "./pages/StrategicGoalsManager";
+import ActivityForm from "./pages/ActivityForm";
 
-import bgPassword from "./assets/auth-bg-2.jpg";
 
-/* ===============================
-   Authenticated App Component
-   =============================== */
-function AuthenticatedApp({ user, signOut }) {
-  const [page, setPage] = useState("home");
-  const [accessToken, setAccessToken] = useState(null);
-  const [groups, setGroups] = useState([]);
-
-  useEffect(() => {
-    async function loadSession() {
-      try {
-        const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
-        const payload = session.tokens?.accessToken?.payload;
-        // console.log("Access token being sent:", token);
-        // console.log("Payload token being sent:", payload);
-
-        setAccessToken(token);
-        setGroups(payload?.["cognito:groups"] || []);
-      } catch (err) {
-        console.error("Failed to fetch auth session:", err);
-      }
-    }
-
-    loadSession();
-  }, []);
-
-  const isAdmin = groups.includes("admin");
-
+function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4"
-    style={{
-        backgroundImage: `url(${bgPassword})`,
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-    }}
-    >
-      <div className="max-w-4xl mx-auto w-full">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Activity Tracker
-          </h1>
-
-          <div className="space-x-3">
-            <button
-              onClick={() => setPage("home")}
-              className="px-4 py-2 rounded-lg border border-blue-600 border-2 text-blue-600 bg-white hover:border-black hover:text-black"
-            >
-              Home
-            </button>
-
-            {isAdmin && (
-              <button
-                onClick={() => setPage("add")}
-                className="px-4 py-2 rounded-lg border border-blue-600 border-2 text-blue-600 bg-white hover:border-black hover:text-black"
-              >
-                Add User
-              </button>
-            )}
-
-            {isAdmin && (
-              <button
-                onClick={() => setPage("initiatives")}
-                className="px-4 py-2 rounded-lg border border-blue-600 border-2 text-blue-600 bg-white hover:border-black hover:text-black"
-              >
-                Manage Initiatives
-              </button>
-            )}
-
-            <button
-              onClick={signOut}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-
-        {/* Home */}
-        {page === "home" && (
-          <div className="bg-white p-6 rounded-xl shadow">            
-            
-            <p className="text-lg mb-2 text-black">
-              Logged in as{" "}
-              <strong>{user?.attributes?.email ?? "Unknown"}</strong>
-            </p>
-
-            <p className="text-sm text-gray-600 mb-2">
-              Groups: {groups.length ? groups.join(", ") : "None"}
-            </p>
-
-            <p className="text-xs text-gray-400 break-all">
-              Access Token Loaded: {accessToken ? "Yes" : "No"}
-            </p>
-          </div>
-        )}
-
-        {/* Admin: Add User */}
-        {page === "add" && isAdmin && (
-          <div className="mt-6">
-            <AddUserForm accessToken={accessToken} />
-          </div>
-        )}
-        {page === "initiatives" && isAdmin && (
-          <div className="mt-6">
-            <InitiativesManager accessToken={accessToken} />
-          </div>
-        )}
-      </div>
+    <div className="bg-white p-6 rounded-xl shadow">
+      <h2 className="text-xl font-bold mb-2">Welcome</h2>
+      <p className="text-gray-600">You are logged in.</p>
     </div>
   );
 }
 
-/* ===============================
-   Root App
-   =============================== */
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -132,15 +31,14 @@ export default function App() {
   useEffect(() => {
     async function checkUser() {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        const u = await getCurrentUser();
+        setUser(u);
       } catch {
         setUser(null);
       } finally {
         setLoading(false);
       }
     }
-
     checkUser();
   }, []);
 
@@ -151,12 +49,30 @@ export default function App() {
   }
 
   return (
-    <AuthenticatedApp
-      user={user}
-      signOut={async () => {
-        await signOut();
-        setUser(null);
-      }}
-    />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          element={
+            <AuthenticatedLayout
+              onSignOut={async () => {
+                await signOut();
+                setUser(null);
+              }}
+            />
+          }
+        >
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/admin/users" element={<AddUserForm />} />
+          <Route path="/initiatives" element={<InitiativesManager />} />
+          <Route path="/partnership-types" element={<PartnershipTypes />} />
+          <Route path="/funding-sources" element={<FundingSourcesManager />} />
+          <Route path="/education-levels" element={<EducationLevelsManager />} />
+          <Route path="/cultural-wealth-tags" element={<CulturalWealthTagsManager />} />
+          <Route path="/strategic-goals" element={<StrategicGoalsManager />} />
+          <Route path="/activities" element={<ActivityForm />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }

@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, Enum, TIMESTAMP, Boolean, text
 from sqlalchemy.sql import func
 from app.database import Base
 import enum
+from sqlalchemy.orm import relationship
+from app.models.association import activity_leads
 
 class UserRole(enum.Enum):
     admin = "admin"
@@ -20,3 +22,9 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     updated_at = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     deleted_at = Column(TIMESTAMP, nullable=True)
+
+    activities = relationship(
+        "Activity",
+        secondary=activity_leads,
+        back_populates="leads"
+    )

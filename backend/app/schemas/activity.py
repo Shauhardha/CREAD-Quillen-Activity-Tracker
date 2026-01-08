@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+# app/schemas/activity.py
+from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List
 from enum import Enum
 from datetime import date
@@ -7,6 +8,12 @@ class ActivityStatus(str, Enum):
     planned = "planned"
     in_progress = "in_progress"
     completed = "completed"
+
+class LocationOut(BaseModel):
+    id: int
+    state: str
+    county: str
+    city: str
 
 class ActivityCreate(BaseModel):
     title: str
@@ -20,8 +27,9 @@ class ActivityCreate(BaseModel):
     partnership_type_id: Optional[int]
     funding_source_id: Optional[int]
     notes: Optional[str]
-    goal_ids: Optional[List[int]] = []
-    cultural_tag_ids: Optional[List[int]] = []
+    lead_staff_ids: list[int] = []
+    # goal_ids: Optional[List[int]] = []
+    # cultural_tag_ids: Optional[List[int]] = []
 
 class ActivityOut(BaseModel):
     id: int
@@ -32,12 +40,12 @@ class ActivityOut(BaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
     location_id: Optional[int]
+    location: Optional[LocationOut] = None
     education_level_id: Optional[int]
     partnership_type_id: Optional[int]
     funding_source_id: Optional[int]
     notes: Optional[str]
-    goal_ids: Optional[List[int]]
-    cultural_tag_ids: Optional[List[int]]
+    lead_staff_ids: List[int] = []
 
     class Config:
         from_attributes = True

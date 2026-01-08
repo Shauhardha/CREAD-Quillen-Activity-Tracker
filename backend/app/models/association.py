@@ -7,3 +7,11 @@ activity_goals = Table(
     Column("activity_id", Integer, ForeignKey("activities.id"), primary_key=True),
     Column("goal_id", Integer, ForeignKey("strategic_goals.id"), primary_key=True),
 )
+
+# Many-to-many: activities <-> lead staff (users)
+activity_leads = Table(
+    "activity_leads",
+    Base.metadata,
+    Column("activity_id", Integer, ForeignKey("activities.id"), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+)

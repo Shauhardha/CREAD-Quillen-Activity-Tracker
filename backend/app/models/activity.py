@@ -2,6 +2,7 @@ from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, Foreign
 from app.database import Base
 from sqlalchemy.orm import relationship
 from app.models.association import activity_goals
+from app.models.association import activity_leads
 
 # activity_goals = Table(
 #     "activity_goals", Base.metadata,
@@ -22,7 +23,7 @@ class Activity(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text)
     initiative_id = Column(Integer, ForeignKey("initiatives.id"))
-    lead_staff_id = Column(Integer, ForeignKey("users.id"))
+    # lead_staff_id = Column(Integer, ForeignKey("users.id"))
     status = Column(Enum('planned','in_progress','completed', name='activity_status'))
     start_date = Column(Date)
     end_date = Column(Date)
@@ -37,7 +38,7 @@ class Activity(Base):
 
     # Relationships
     initiative = relationship("Initiative")
-    lead_staff = relationship("User", foreign_keys=[lead_staff_id])
+    # lead_staff = relationship("User", foreign_keys=[lead_staff_id])
     creator = relationship("User", foreign_keys=[created_by])
     updater = relationship("User", foreign_keys=[updated_by])
     location = relationship("Location")
@@ -46,3 +47,4 @@ class Activity(Base):
     funding_source = relationship("FundingSource")
     goals = relationship("StrategicGoal", secondary=activity_goals)
     cultural_tags = relationship("CulturalWealthTag", secondary=activity_cultural_wealth)
+    leads = relationship("User", secondary=activity_leads, back_populates="activities")

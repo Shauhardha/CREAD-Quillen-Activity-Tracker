@@ -30,7 +30,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
         username: email,
         password,
         });
-        console.log("SIGN IN RESPONSE:", response);
+        // console.log("SIGN IN RESPONSE:", response);
 
         // 🔑 Cognito requires password change
         if (
@@ -92,7 +92,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
 
             <form onSubmit={handleEmailSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email address
                 </label>
                 <input
@@ -119,7 +119,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
 
         {step === "password" && (
           <>
-            <h1 className="text-2xl font-bold mb-2 text-black mb-4">Enter your password</h1>
+            <h1 className="text-2xl font-bold text-black mb-4">Enter your password</h1>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>

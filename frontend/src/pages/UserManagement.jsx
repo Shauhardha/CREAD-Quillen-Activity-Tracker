@@ -211,13 +211,13 @@ function AddUserForm() {
   };
 
   return (
-    <div className=" mx-auto bg-gray-100 p-6 rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto bg-gray-100 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-8 text-black">User Management</h2>
 
       <div className="bg-white p-4 rounded-lg shadow">      
 
           <h3 className="text-lg font-semibold mb-4 text-black">Add New User</h3>
-          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs" autoComplete="off">
             <div>
               <label className="block text-sm text-black font-semibold mb-1">Full Name</label>
               <input
@@ -226,7 +226,7 @@ function AddUserForm() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
             </div>
 
@@ -239,7 +239,7 @@ function AddUserForm() {
                 onChange={handleChange}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-2 border bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
             </div>
 
@@ -253,7 +253,7 @@ function AddUserForm() {
                 required
                 minLength="8"
                 autoComplete="new-password"
-                className="w-full px-4 py-2 border bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               />
                 <div className="mt-2 ml-1 flex items-center text-sm">
                   <input
@@ -273,7 +273,7 @@ function AddUserForm() {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border bg-gray-100 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
               >
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
@@ -300,7 +300,7 @@ function AddUserForm() {
       {/* Users table */}
       <div className="mt-8 bg-white p-4 rounded-lg shadow">
         <h3 className="text-lg font-semibold mb-3 text-black">Users List</h3>
-        <div className="h-[30vh] overflow-x-auto overflow-y-auto">
+        <div className="h-[30vh] overflow-x-auto w-[35vh] md:w-full overflow-y-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="text-sm text-gray-600 border-b">
@@ -313,7 +313,7 @@ function AddUserForm() {
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b text-sm">
+                <tr key={u.id} className="border-b text-[11px] md:text-sm">
                   <td className="py-2 px-3">
                     {editingId === u.id ? (
                       <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 border rounded" />

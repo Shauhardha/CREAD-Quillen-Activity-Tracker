@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
-from app.routers import activity, initiative, strategic_goal, user, outcome
+from app.routers import activity, initiative, strategic_goal, user, outcome, miscellaneous, locations
+from app.routers import activity_leads
 from app.database import engine
 from app.auth import get_current_user
 # --- FastAPI app + CORS ---
@@ -21,6 +22,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        # Add these if needed (though unlikely for the Origin header)
+        "http://localhost:8001",
+        "http://127.0.0.1:8001",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -32,6 +36,9 @@ app.include_router(initiative.router)
 app.include_router(strategic_goal.router)
 app.include_router(activity.router)
 app.include_router(outcome.router)
+app.include_router(miscellaneous.router)
+app.include_router(locations.router)
+app.include_router(activity_leads.router)
 
 @app.get("/")
 def health_check():

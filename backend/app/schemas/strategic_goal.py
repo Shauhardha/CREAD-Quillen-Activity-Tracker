@@ -11,6 +11,7 @@ class StrategicGoalCreate(BaseModel):
     goal_name: str
     description: Optional[str] = None
     goal_term: GoalTerm
+    is_active: bool
 
 class StrategicGoalOut(BaseModel):
     id: int
@@ -18,6 +19,7 @@ class StrategicGoalOut(BaseModel):
     goal_name: str
     description: Optional[str]
     goal_term: GoalTerm
+    is_active: bool
 
     class Config:
         from_attributes = True
