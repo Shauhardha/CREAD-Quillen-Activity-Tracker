@@ -64,7 +64,7 @@ export default function App() {
             />
           }
         >
-          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/" element={<Navigate to="/activitylist" replace />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/admin/users" element={<AddUserForm />} />
           <Route path="/initiatives" element={<InitiativesManager />} />

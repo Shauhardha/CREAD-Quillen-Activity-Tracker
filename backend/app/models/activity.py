@@ -1,5 +1,5 @@
 # app/models/activities.py
-from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP
+from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP, func
 from app.database import Base
 from sqlalchemy.orm import relationship
 # from app.models.association import activity_goals
@@ -36,6 +36,12 @@ class Activity(Base):
     created_by = Column(Integer, ForeignKey("users.id"))
     updated_by = Column(Integer, ForeignKey("users.id"))
     deleted_at = Column(TIMESTAMP, nullable=True)
+    updated_at = Column(
+        TIMESTAMP,
+        server_default=func.now(),
+        onupdate=func.now(),           # ← This is the magic!
+        nullable=False
+    )
 
     # Relationships
     initiative = relationship("Initiative")

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.database import get_db
 from app.models.activity import Activity
-from app.schemas.activity import ActivityCreate, ActivityOut
+from app.schemas.activity import ActivityCreate, ActivityOut, ActivityStatusUpdate
 from app.models.user import User
 from app.auth import get_current_user
 from sqlalchemy.orm import joinedload  # Add this import at top if not present
@@ -187,3 +187,33 @@ def get_activity(id: int, db: Session = Depends(get_db)):
     # For now, leaving it empty or fetch separately
 
     return activity_dict
+
+
+@router.put("/{id}/status")
+def update_activity_status(
+    id: int,
+    payload: ActivityStatusUpdate,
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    activity = db.query(Activity).filter(Activity.id == id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Update status only
+    activity.status = payload.status
+
+    # Set updated_by (Cognito → users table)
+    sub = user.get("sub") if user else None
+    if sub:
+        db_user = db.query(User).filter(User.cognito_sub == sub).first()
+        if db_user:
+            activity.updated_by = db_user.id
+
+    db.commit()
+    db.refresh(activity)
+
+    return {
+        "id": activity.id,
+        "status": activity.status,
+    }

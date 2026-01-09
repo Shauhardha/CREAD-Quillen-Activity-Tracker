@@ -24,6 +24,9 @@ export default function ActivityDetails({ accessToken }) {
     evaluation_tool_reference: "",
   });
 
+  const [statusValue, setStatusValue] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   const getStatusDisplay = (status) => {
     const map = {
       planned: { text: "Pending", color: "bg-yellow-100 text-yellow-800" },
@@ -54,6 +57,12 @@ export default function ActivityDetails({ accessToken }) {
       setProgressUpdates(prog);
     });
   }, [id]);
+
+  useEffect(() => {
+    if (activity?.status) {
+      setStatusValue(activity.status);
+    }
+  }, [activity]);
 
   const submitProgress = async (e) => {
     e.preventDefault();
@@ -90,13 +99,67 @@ export default function ActivityDetails({ accessToken }) {
     setProgressUpdates(await res.json());
   };
 
+  const updateStatus = async () => {
+    if (!statusValue || statusValue === activity.status) return;
+
+    console.log("Updating status to:", statusValue);
+
+    setUpdatingStatus(true);
+
+    try {
+      const { tokens } = await fetchAuthSession();
+      if (!tokens?.idToken) throw new Error("Not authenticated");
+
+      const res = await fetch(`${API_BASE}/activities/${id}/status`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${tokens.idToken.toString()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: statusValue }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update status");
+
+      // Update UI without refetching everything
+      setActivity(prev => ({ ...prev, status: statusValue }));
+    } catch (err) {
+      console.error(err);
+      alert("Status update failed");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   if (!activity) return <p className="p-6">Loading…</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-4">
-      <button onClick={() => navigate(-1)} className="text-indigo-600">
-        ← Back to Activities
-      </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button onClick={() => navigate(-1)} className="text-indigo-600">
+            ← Back to Activities
+          </button>
+
+          <div className="mt-3 flex items-center gap-3">
+            <select
+              value={statusValue}
+              onChange={e => setStatusValue(e.target.value)}
+              className="border rounded-lg px-3 py-1 text-sm"
+            >
+              <option value="planned">Planned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <button
+              onClick={updateStatus}
+              disabled={updatingStatus || statusValue === activity.status}
+              className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+            >
+              Update Status
+            </button>
+          </div>
+        </div>
 
       {/* Activity Info */}
       <div className="bg-white rounded-xl shadow p-6 space-y-4">

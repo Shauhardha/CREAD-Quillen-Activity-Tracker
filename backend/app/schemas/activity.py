@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, root_validator
 from typing import Optional, List
 from enum import Enum
 from datetime import date
+from typing_extensions import Literal
 
 class ActivityStatus(str, Enum):
     planned = "planned"
@@ -30,6 +31,9 @@ class ActivityCreate(BaseModel):
     lead_staff_ids: list[int] = []
     # goal_ids: Optional[List[int]] = []
     # cultural_tag_ids: Optional[List[int]] = []
+
+class ActivityStatusUpdate(BaseModel):
+    status: Literal["planned", "in_progress", "completed"]    
 
 class ActivityOut(BaseModel):
     id: int
