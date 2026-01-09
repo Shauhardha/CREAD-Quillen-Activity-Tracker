@@ -2,7 +2,7 @@
 from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP
 from app.database import Base
 from sqlalchemy.orm import relationship
-from app.models.association import activity_goals
+# from app.models.association import activity_goals
 from app.models.association import activity_leads
 
 # activity_goals = Table(
@@ -11,11 +11,11 @@ from app.models.association import activity_leads
 #     Column("goal_id", Integer, ForeignKey("strategic_goals.id"), primary_key=True)
 # )
 
-activity_cultural_wealth = Table(
-    "activity_cultural_wealth", Base.metadata,
-    Column("activity_id", Integer, ForeignKey("activities.id"), primary_key=True),
-    Column("cultural_wealth_id", Integer, ForeignKey("cultural_wealth_tags.id"), primary_key=True)
-)
+# activity_cultural_wealth = Table(
+#     "activity_cultural_wealth", Base.metadata,
+#     Column("activity_id", Integer, ForeignKey("activities.id"), primary_key=True),
+#     Column("cultural_wealth_id", Integer, ForeignKey("cultural_wealth_tags.id"), primary_key=True)
+# )
 
 class Activity(Base):
     __tablename__ = "activities"
@@ -46,6 +46,6 @@ class Activity(Base):
     education_level = relationship("EducationLevel")
     partnership_type = relationship("PartnershipType")
     funding_source = relationship("FundingSource")
-    goals = relationship("StrategicGoal", secondary=activity_goals)
-    cultural_tags = relationship("CulturalWealthTag", secondary=activity_cultural_wealth)
+    # goals = relationship("StrategicGoal", secondary=activity_goals)
+    # cultural_tags = relationship("CulturalWealthTag", secondary=activity_cultural_wealth)
     leads = relationship("User", secondary=activity_leads, back_populates="activities")

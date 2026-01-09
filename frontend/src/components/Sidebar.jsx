@@ -109,6 +109,10 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               <NavLink to="/activities" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Activities
               </NavLink>
+
+              <NavLink to="/association" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Associate Activities
+              </NavLink>
             </nav>
 
             <button onClick={onSignOut} className="mt-40 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">

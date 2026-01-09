@@ -130,7 +130,7 @@ export default function PartnershipTypes({ accessToken }) {
 
 	return (
 		<div className="max-w-xl md:max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
-			<h2 className="text-xl font-semibold mb-4">Partnership Types</h2>
+			<h2 className="text-2xl font-bold mb-4">Partnership Types</h2>
 
 			<form onSubmit={handleSubmit} className="mb-6 text-sm">
 				<div className="mb-3">

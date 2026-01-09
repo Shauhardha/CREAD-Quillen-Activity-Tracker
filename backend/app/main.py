@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from app.routers import activity, initiative, strategic_goal, user, outcome, miscellaneous, locations
+from app.routers import activity, initiative, strategic_goal, user, outcome, miscellaneous, locations, activity_cultural, activity_goals
 from app.routers import activity_leads
 from app.database import engine
 from app.auth import get_current_user
@@ -39,6 +39,8 @@ app.include_router(outcome.router)
 app.include_router(miscellaneous.router)
 app.include_router(locations.router)
 app.include_router(activity_leads.router)
+app.include_router(activity_cultural.router)
+app.include_router(activity_goals.router)
 
 @app.get("/")
 def health_check():

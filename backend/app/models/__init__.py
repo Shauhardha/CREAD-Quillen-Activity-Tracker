@@ -1,5 +1,5 @@
-from .activity import Activity, activity_cultural_wealth
-from .association import activity_goals
+from .activity import Activity
+# from .association import activity_goals
 from .initiative import Initiative
 from .outcome import ProgressUpdate, Attachment
 from .user import User

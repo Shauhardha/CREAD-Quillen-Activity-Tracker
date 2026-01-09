@@ -13,6 +13,7 @@ import EducationLevelsManager from "./pages/EducationLevelsManager";
 import CulturalWealthTagsManager from "./pages/CulturalWealthTagsManager";
 import StrategicGoalsManager from "./pages/StrategicGoalsManager";
 import ActivityForm from "./pages/ActivityForm";
+import Association from "./pages/Association";
 
 
 function HomePage() {
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/cultural-wealth-tags" element={<CulturalWealthTagsManager />} />
           <Route path="/strategic-goals" element={<StrategicGoalsManager />} />
           <Route path="/activities" element={<ActivityForm />} />
+          <Route path="/association" element={<Association />} />
         </Route>
       </Routes>
     </BrowserRouter>

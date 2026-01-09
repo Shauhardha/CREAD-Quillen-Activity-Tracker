@@ -369,9 +369,9 @@ export default function ActivityManager() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto p-2">
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow space-y-6 text-sm">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-6 text-sm">
         <h2 className="text-2xl font-bold">{editingId ? "Edit Activity" : "Create New Activity"}</h2>
         {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
@@ -467,7 +467,7 @@ export default function ActivityManager() {
       </form>
 
       {/* Activities List */}
-      <div className="bg-white p-8 rounded-xl shadow text-sm">
+      <div className="bg-white p-6 rounded-xl shadow text-sm">
         <h2 className="text-2xl font-bold mb-6">Current Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities yet.</p>
@@ -476,7 +476,7 @@ export default function ActivityManager() {
             {activities.map(act => (
               <div key={act.id} className="border rounded-lg p-4 flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-lg">{act.title}</h3>
+                  <h3 className="font-semibold text-base">{act.title}</h3>
                   <p className="text-sm text-gray-600">{act.status} • {act.start_date} to {act.end_date}</p>
                   {act.location && <p className="text-sm">Location: {act.location.city}, {act.location.county}, {act.location.state}</p>}
                 </div>
