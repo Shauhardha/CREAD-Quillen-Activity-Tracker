@@ -107,11 +107,15 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               </NavLink>
 
               <NavLink to="/activities" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Activities
+                Add Activities
               </NavLink>
 
               <NavLink to="/association" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Associate Activities
+              </NavLink>
+
+              <NavLink to="/activitylist" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Activities List
               </NavLink>
             </nav>
 

@@ -129,89 +129,91 @@ export default function PartnershipTypes({ accessToken }) {
     }
 
 	return (
-		<div className="max-w-xl md:max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
+		<div className="max-w-xl md:max-w-4xl mx-auto">
 			<h2 className="text-2xl font-bold mb-4">Partnership Types</h2>
+            <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
+                <h3 className="text-lg font-semibold mb-4">
+                {editing ? "Update" : "Add"} Partnership Type
+                </h3>
+                <form onSubmit={handleSubmit} className="mb-6 text-sm">
+                    <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700">Type name</label>
+                        <input
+                            value={form.type_name}
+                            onChange={(e) => setForm((f) => ({ ...f, type_name: e.target.value }))}
+                            placeholder="Partnership name"
+                            required
+                            className="mt-1 block w-full rounded-md border shadow-sm p-2"
+                        />
+                    </div>
 
-			<form onSubmit={handleSubmit} className="mb-6 text-sm">
-				<div className="mb-3">
-					<label className="block text-sm font-medium text-gray-700">Type name</label>
-					<input
-						value={form.type_name}
-						onChange={(e) => setForm((f) => ({ ...f, type_name: e.target.value }))}
-                        placeholder="Partnership name"
-						required
-						className="mt-1 block w-full rounded-md border shadow-sm p-2"
-					/>
-				</div>
+                    <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea
+                            value={form.description}
+                            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                            placeholder="Description of the partnership type"
+                            className="mt-1 block w-full rounded-md border shadow-sm p-2"
+                        />
+                    </div>
 
-				<div className="mb-3">
-					<label className="block text-sm font-medium text-gray-700">Description</label>
-					<textarea
-						value={form.description}
-						onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                        placeholder="Description of the partnership type"
-						className="mt-1 block w-full rounded-md border shadow-sm p-2"
-					/>
-				</div>
+                    <div className="flex space-x-2">
+                        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50" type="submit">
+                            {editing ? "Save" : "Add"}
+                        </button>
+                        {editing && (   
+                            <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-200 rounded">
+                                Cancel
+                            </button>
+                        )}
+                    </div>
+                </form>
 
-				<div className="flex space-x-2">
-					<button className="px-4 py-2 bg-blue-600 text-white rounded" type="submit">
-						{editing ? "Save" : "Add"}
-					</button>
-					<button
-						type="button"
-						onClick={resetForm}
-						className="px-4 py-2 bg-gray-200 rounded"
-					>
-						Cancel
-					</button>
-				</div>
-			</form>
-
-			<div>
-				<h3 className="font-medium mb-2">Active Partnership Types</h3>
-				{loading ? (
-					<div>Loading...</div>
-				) : items.length === 0 ? (
-					<div className="text-sm text-gray-500">No partnership types found.</div>
-				) : (
-					<div className="overflow-x-auto h-[40vh] overflow-y-auto">
-						<table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-							<thead className="bg-gray-50">
-								<tr>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Description</th>
-                                    <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Actions</th>
-								</tr>
-							</thead>
-							<tbody className="bg-white divide-y divide-gray-100 text-[11px] md:text-sm">
-								{items.map((it) => (
-									<tr key={it.id}>
-										<td className="px-4 py-2 align-top">{it.type_name}</td>
-											<td className="px-4 py-2 align-top break-words whitespace-normal max-w-[40ch]">{it.description}</td>
-										<td className="px-4 py-2 align-top">
-                                            <div className="flex justify-end gap-1">
-                                                <button
-                                                onClick={() => handleEdit(it)}
-                                                className="px-3 py-1 rounded text-sm"
-                                                >
-                                                <FaEdit />
-                                                </button>
-                                                <button
-                                                onClick={() => handleDelete(it)}
-                                                className="px-3 py-1 text-red-600 rounded text-sm"
-                                                >
-                                                <FaTrash />
-                                                </button>
-                                            </div>
-                                        </td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				)}
-			</div>
+                <div>
+                    <h3 className="font-medium mb-2">Active Partnership Types</h3>
+                    {loading ? (
+                        <div>Loading...</div>
+                    ) : items.length === 0 ? (
+                        <div className="text-sm text-gray-500">No partnership types found.</div>
+                    ) : (
+                        <div className="overflow-x-auto h-[40vh] overflow-y-auto">
+                            <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Description</th>
+                                        <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-100 text-[11px] md:text-sm">
+                                    {items.map((it) => (
+                                        <tr key={it.id}>
+                                            <td className="px-4 py-2 align-top">{it.type_name}</td>
+                                                <td className="px-4 py-2 align-top break-words whitespace-normal max-w-[40ch]">{it.description}</td>
+                                            <td className="px-4 py-2 align-top">
+                                                <div className="flex justify-end gap-1">
+                                                    <button
+                                                    onClick={() => handleEdit(it)}
+                                                    className="px-3 py-1 rounded text-base text-blue-600"
+                                                    >
+                                                    <FaEdit />
+                                                    </button>
+                                                    <button
+                                                    onClick={() => handleDelete(it)}
+                                                    className="px-3 py-1 text-red-600 rounded text-base"
+                                                    >
+                                                    <FaTrash />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>    
 		</div>
 	);
 }

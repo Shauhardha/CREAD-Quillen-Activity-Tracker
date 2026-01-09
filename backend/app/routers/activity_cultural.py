@@ -86,3 +86,45 @@ def delete_activity_cultural_wealth(
     db.delete(assoc)
     db.commit()
     return {"status": "deleted"}
+
+@router.get("/activity/{activity_id}", response_model=List[ActivityCulturalWealthLinkedOut])
+def get_wealth_for_activity(activity_id: int, db: Session = Depends(get_db)):
+    rows = db.execute(text("""
+        SELECT 
+            acw.activity_id,
+            a.title AS activity_title,
+            acw.cultural_wealth_id,
+            c.name AS cultural_wealth_name
+        FROM activity_cultural_wealth acw
+        JOIN activities a ON a.id = acw.activity_id
+        JOIN cultural_wealth_tags c ON c.id = acw.cultural_wealth_id
+        WHERE acw.activity_id = :activity_id
+    """), {"activity_id": activity_id}).fetchall()
+
+    return [
+        ActivityCulturalWealthLinkedOut(
+            activity_id=row.activity_id,
+            activity_title=row.activity_title,
+            cultural_wealth_id=row.cultural_wealth_id,
+            cultural_wealth_name=row.cultural_wealth_name
+        )
+        for row in rows
+    ]
+
+@router.get("/by-activity/{activity_id}")
+def get_wealth_for_activity(
+    activity_id: int,
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(
+            CulturalWealthTag.id,
+            CulturalWealthTag.name
+        )
+        .join(
+            ActivityCulturalWealth,
+            ActivityCulturalWealth.cultural_wealth_id == CulturalWealthTag.id
+        )
+        .filter(ActivityCulturalWealth.activity_id == activity_id)
+        .all()
+    )

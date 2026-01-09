@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.activity import Activity
 from app.models.user import User
 from app.models.association import activity_leads
+from sqlalchemy import text
 
 router = APIRouter(
     prefix="/activities",
@@ -58,3 +59,37 @@ def remove_activity_lead(activity_id: int, user_id: int, db: Session = Depends(g
         activity.leads.remove(user)
         db.commit()
     return {"message": "removed"}
+
+
+@router.get("/leads/{id}")
+def get_activity_leads(id: int, db: Session = Depends(get_db)):
+    """
+    Get all lead staff members for a specific activity, with their names.
+    Ordered by user name.
+    """
+    query = text("""
+        SELECT al.activity_id, al.user_id, u.name AS user_name
+        FROM activity_leads al
+        LEFT JOIN users u ON u.id = al.user_id
+        LEFT JOIN activities a ON a.id = al.activity_id
+        WHERE a.id = :id
+        ORDER BY user_name
+    """)
+
+    results = db.execute(query, {"id": id}).fetchall()
+
+    if not results:
+        # Could mean no leads, or activity doesn't exist — both result in empty list
+        return []
+
+    # Convert rows to list of dicts for clean JSON response
+    leads = [
+        {
+            "activity_id": row.activity_id,
+            "user_id": row.user_id,
+            "user_name": row.user_name or "Unknown"  # Handle possible NULL names
+        }
+        for row in results
+    ]
+
+    return leads

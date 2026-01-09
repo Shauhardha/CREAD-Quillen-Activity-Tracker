@@ -136,92 +136,93 @@ export default function FundingSourcesManager() {
   if (!token) return <div className="p-6 text-red-600">Not authenticated</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow">
+    <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-8">Manage Funding Sources</h2>
+      <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
+        <h3 className="text-lg font-semibold mb-2">
+          {editingId ? "Update" : "Add"} Funding Source
+        </h3>
 
-      <h3 className="text-lg font-semibold mb-2">
-        {editingId ? "Update" : "Add"} Funding Source
-      </h3>
-
-      <form onSubmit={handleSubmit} className="space-y-3 mb-6 text-sm">
-        <input
-          type="text"
-          required
-          placeholder="Source name"
-          value={sourceName}
-          onChange={(e) => setSourceName(e.target.value)}
-          disabled={loading}
-          className="w-full border rounded px-3 py-2"
-        />
-
-        <textarea
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          disabled={loading}
-          className="w-full border rounded px-3 py-2"
-        />
-
-        <div className="flex gap-2">
-          <button
-            type="submit"
+        <form onSubmit={handleSubmit} className="space-y-3 mb-6 text-sm">
+          <input
+            type="text"
+            required
+            placeholder="Source name"
+            value={sourceName}
+            onChange={(e) => setSourceName(e.target.value)}
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            {editingId ? "Update" : "Add"}
-          </button>
+            className="w-full border rounded px-3 py-2"
+          />
 
-          {editingId && (
+          <textarea
+            placeholder="Description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={loading}
+            className="w-full border rounded px-3 py-2"
+          />
+
+          <div className="flex gap-2">
             <button
-              type="button"
-              onClick={cancelEdit}
-              className="px-4 py-2 border rounded"
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              Cancel
+              {editingId ? "Update" : "Add"}
             </button>
+
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+
+        {error && <p className="text-red-600 mb-4">{error}</p>}
+
+        <h3 className="text-lg font-semibold mb-2">Existing Funding Sources</h3>
+        <ul className="space-y-2">
+          {sources.length === 0 && (
+            <li className="text-gray-500 text-sm">No funding sources yet.</li>
           )}
-        </div>
-      </form>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+          {sources.map((item) => (
+            <li
+              key={item.id}
+              className="flex justify-between items-start border rounded px-3 py-2 text-sm"
+            >
+              <div>
+                <p className="font-medium">{item.source_name}</p>
+                {item.description && (
+                  <p className="text-xs text-gray-600">{item.description}</p>
+                )}
+              </div>
 
-      <h3 className="text-lg font-semibold mb-2">Existing Funding Sources</h3>
-      <ul className="space-y-2">
-        {sources.length === 0 && (
-          <li className="text-gray-500 text-sm">No funding sources yet.</li>
-        )}
-
-        {sources.map((item) => (
-          <li
-            key={item.id}
-            className="flex justify-between items-start border rounded px-3 py-2 text-sm"
-          >
-            <div>
-              <p className="font-medium">{item.source_name}</p>
-              {item.description && (
-                <p className="text-xs text-gray-600">{item.description}</p>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => startEdit(item)}
-                className="text-blue-600"
-                disabled={loading}
-              >
-                <FaEdit />
-              </button>
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="text-red-600"
-                disabled={loading}
-              >
-                <FaTrash />
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => startEdit(item)}
+                  className="text-blue-600 text-base"
+                  disabled={loading}
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="text-red-600 text-base"
+                  disabled={loading}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>  
     </div>
   );
 }

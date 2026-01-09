@@ -211,154 +211,155 @@ function AddUserForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-gray-100 p-6 rounded-lg shadow-lg">
+    <div className="max-w-4xl mx-auto rounded-lg">
       <h2 className="text-2xl font-bold mb-8 text-black">User Management</h2>
+        <div className="rounded-xl shadow overflow-x-auto">
+          <div className="bg-white p-4 rounded-lg shadow">      
 
-      <div className="bg-white p-4 rounded-lg shadow">      
-
-          <h3 className="text-lg font-semibold mb-4 text-black">Add New User</h3>
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs" autoComplete="off">
-            <div>
-              <label className="block text-sm text-black font-semibold mb-1">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-black font-medium mb-1">Email (used for login)</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                autoComplete="email"
-                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-black font-medium mb-1">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength="8"
-                autoComplete="new-password"
-                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-                <div className="mt-2 ml-1 flex items-center text-sm">
+              <h3 className="text-lg font-semibold mb-4 text-black">Add New User</h3>
+              <form onSubmit={handleSubmit} className="space-y-4 text-xs" autoComplete="off">
+                <div>
+                  <label className="block text-sm text-black font-semibold mb-1">Full Name</label>
                   <input
-                    id="show-password"
-                    type="checkbox"
-                    checked={showPassword}
-                    onChange={(e) => setShowPassword(e.target.checked)}
-                    className="mr-2 w-4 h-4 bg-white text-black border-gray-300 rounded"
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   />
-                  <label htmlFor="show-password" className="text-gray-700">Show password</label>
                 </div>
+
+                <div>
+                  <label className="block text-sm text-black font-medium mb-1">Email (used for login)</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    autoComplete="email"
+                    className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-black font-medium mb-1">Password</label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength="8"
+                    autoComplete="new-password"
+                    className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                    <div className="mt-2 ml-1 flex items-center text-sm">
+                      <input
+                        id="show-password"
+                        type="checkbox"
+                        checked={showPassword}
+                        onChange={(e) => setShowPassword(e.target.checked)}
+                        className="mr-2 w-4 h-4 bg-white text-black border-gray-300 rounded"
+                      />
+                      <label htmlFor="show-password" className="text-gray-700">Show password</label>
+                    </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-black font-medium mb-1">Role</label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  >
+                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
+                    <option value="read_only">Read Only</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {loading ? "Adding User..." : "Add User"}
+                </button>
+              </form>
+          </div> 
+
+          {/* {message && (
+            <div className={`mt-6 p-4 rounded-lg text-center ${message.includes("Success") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+              {message}
             </div>
-
-            <div>
-              <label className="block text-sm text-black font-medium mb-1">Role</label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              >
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-                <option value="read_only">Read Only</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {loading ? "Adding User..." : "Add User"}
-            </button>
-          </form>
-      </div> 
-
-      {/* {message && (
-        <div className={`mt-6 p-4 rounded-lg text-center ${message.includes("Success") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-          {message}
-        </div>
-      )} */}
-      
-      {/* Users table */}
-      <div className="mt-8 bg-white p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-3 text-black">Users List</h3>
-        <div className="h-[30vh] overflow-x-auto w-[35vh] md:w-full overflow-y-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="text-sm text-gray-600 border-b">
-                <th className="py-2 px-3">Name</th>
-                <th className="py-2 px-3">Email</th>
-                <th className="py-2 px-3">Role</th>
-                <th className="py-2 px-3">Active</th>
-                <th className="py-2 px-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b text-[11px] md:text-sm">
-                  <td className="py-2 px-3">
-                    {editingId === u.id ? (
-                      <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 border rounded" />
-                    ) : (
-                      u.name
-                    )}
-                  </td>
-                  <td className="py-2 px-3">{u.email}</td>
-                  <td className="py-2 px-3">
-                    {editingId === u.id ? (
-                      <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })} className="px-2 py-1 border rounded">
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
-                        <option value="read_only">Read Only</option>
-                      </select>
-                    ) : (
-                      u.role
-                    )}
-                  </td>
-                  <td className="py-2 px-3">
-                    {editingId === u.id ? (
-                      <input type="checkbox" checked={!!editForm.is_active} onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })} />
-                    ) : (
-                      u.is_active ? 'Yes' : 'No'
-                    )}
-                  </td>
-                  <td className="py-2 px-3">
-                    {editingId === u.id ? (
-                      <div className="flex gap-2">
-                        <button onClick={() => saveEdit(u.id)} className="px-3 py-1 bg-green-600 text-white rounded"><FaSave /></button>
-                        <button onClick={cancelEdit} className="px-3 py-1 border rounded text-base"><FaTimesCircle /></button>
-                        <button onClick={() => handleDelete(u.id)} className="px-3 py-1 bg-red-600 text-white rounded"><FaTrash /></button>
-                      </div>
-                    ) : (
+          )} */}
+          
+          {/* Users table */}
+          <div className="mt-8 bg-white p-4 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-3 text-black">Users List</h3>
+            <div className="h-[30vh] overflow-x-auto w-[35vh] md:w-full overflow-y-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-sm text-gray-600 border-b">
+                    <th className="py-2 px-3">Name</th>
+                    <th className="py-2 px-3">Email</th>
+                    <th className="py-2 px-3">Role</th>
+                    <th className="py-2 px-3">Active</th>
+                    <th className="py-2 px-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id} className="border-b text-[11px] md:text-sm">
+                      <td className="py-2 px-3">
+                        {editingId === u.id ? (
+                          <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="px-2 py-1 border rounded" />
+                        ) : (
+                          u.name
+                        )}
+                      </td>
+                      <td className="py-2 px-3">{u.email}</td>
+                      <td className="py-2 px-3">
+                        {editingId === u.id ? (
+                          <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })} className="px-2 py-1 border rounded">
+                            <option value="admin">Admin</option>
+                            <option value="staff">Staff</option>
+                            <option value="read_only">Read Only</option>
+                          </select>
+                        ) : (
+                          u.role
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        {editingId === u.id ? (
+                          <input type="checkbox" checked={!!editForm.is_active} onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })} />
+                        ) : (
+                          u.is_active ? 'Yes' : 'No'
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        {editingId === u.id ? (
                           <div className="flex gap-2">
-                            <button onClick={() => startEdit(u)} className="px-3 py-1 border rounded"><FaEdit /></button>            
+                            <button onClick={() => saveEdit(u.id)} className="px-3 py-1 bg-green-600 text-white rounded"><FaSave /></button>
+                            <button onClick={cancelEdit} className="px-3 py-1 border rounded text-base"><FaTimesCircle /></button>
+                            <button onClick={() => handleDelete(u.id)} className="px-3 py-1 bg-red-600 text-white rounded"><FaTrash /></button>
                           </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        ) : (
+                              <div className="flex gap-2">
+                                <button onClick={() => startEdit(u)} className="px-3 py-1 border rounded text-base text-blue-600"><FaEdit /></button>            
+                              </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div> 
         </div>
-      </div> 
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { FaTrash, FaEdit, FaClipboardCheck } from "react-icons/fa";
 
 export default function ActivityManager() {
   const outlet = useOutletContext();
@@ -143,24 +144,6 @@ export default function ActivityManager() {
     setForm(f => ({ ...f, location_id: "" }));
   }, [county, state, accessToken]);
 
-//   useEffect(() => {
-//     if (skipCascadeRef.current) return;
-
-//     if (!state || !county || !city) {
-//       setForm(f => ({ ...f, location_id: "" }));
-//       return;
-//     }
-
-//     fetch(`${API_BASE}/locations/id?state=${state}&county=${encodeURIComponent(county)}&city=${encodeURIComponent(city)}`, {
-//       headers: { Authorization: `Bearer ${accessToken}` },
-//     })
-//       .then(r => r.json())
-//       .then(data => {
-//         const id = data?.id || "";
-//         setForm(f => ({ ...f, location_id: id }));
-//       })
-//       .catch(() => setForm(f => ({ ...f, location_id: "" })));
-//   }, [city, county, state, accessToken]);
 
   useEffect(() => {
     if (skipCascadeRef.current) return;
@@ -370,9 +353,10 @@ export default function ActivityManager() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto p-2">
+      <h2 className="text-2xl font-bold">Activity Manager</h2>  
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-6 text-sm">
-        <h2 className="text-2xl font-bold">{editingId ? "Edit Activity" : "Create New Activity"}</h2>
+      <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-xl shadow space-y-6 text-sm">
+        <h2 className="text-lg font-semibold">{editingId ? "Edit Activity" : "Create New Activity"}</h2> 
         {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
         {/* Title & Description */}
@@ -388,7 +372,7 @@ export default function ActivityManager() {
         {/* Lead Staff Dropdown */}
         <div className="relative">
           <button type="button" onClick={() => setShowLeads(!showLeads)} className="w-full border p-2 rounded text-left flex justify-between items-center">
-            <span>{form.lead_staff_ids.length ? `${form.lead_staff_ids.length} lead(s) selected` : "Select Lead Staff"}</span>
+            <span>{form.lead_staff_ids.length ? `${form.lead_staff_ids.length} lead(s) selected` : "Select Staff Leads"}</span>
             <span>▼</span>
           </button>
           {showLeads && (
@@ -409,11 +393,12 @@ export default function ActivityManager() {
         </div>
 
         {/* Status & Dates */}
-        <select name="status" value={form.status} onChange={handleChange} className="w-full border p-2 rounded">
+        <select name="status" value={form.status} onChange={handleChange} disabled={!!editingId} className="w-full border p-2 rounded">
           <option value="planned">Planned</option>
           <option value="in_progress">In Progress</option>
           <option value="completed">Completed</option>
         </select>
+        <label className="text-gray-600 ml-2">{editingId ? "Please note that status will only be udpated in Activity Details page" : ""}</label>
 
         <div className="grid grid-cols-2 gap-4">
           <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required className="border p-2 rounded" />
@@ -455,7 +440,7 @@ export default function ActivityManager() {
         <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="w-full border p-2 rounded h-24" />
 
         <div className="flex gap-4">
-          <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">
+          <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
             {editingId ? "Update Activity" : "Create Activity"}
           </button>
           {editingId && (
@@ -467,22 +452,25 @@ export default function ActivityManager() {
       </form>
 
       {/* Activities List */}
-      <div className="bg-white p-6 rounded-xl shadow text-sm">
-        <h2 className="text-2xl font-bold mb-6">Current Activities</h2>
+      <div className="bg-gray-50 p-6 rounded-xl shadow text-sm">
+        <h2 className="text-xl font-semibold mb-2">Current Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities yet.</p>
         ) : (
           <div className="space-y-4">
             {activities.map(act => (
               <div key={act.id} className="border rounded-lg p-4 flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-base">{act.title}</h3>
-                  <p className="text-sm text-gray-600">{act.status} • {act.start_date} to {act.end_date}</p>
-                  {act.location && <p className="text-sm">Location: {act.location.city}, {act.location.county}, {act.location.state}</p>}
-                </div>
+                <div className="flex gap-0">
+                    <FaClipboardCheck className="inline-block mr-2 mt-4 text-blue-500 text-2xl" />
+                    <div>  
+                    <h3 className="font-semibold text-sm">{act.title}</h3>
+                    <p className="text-sm text-gray-600">{act.status} • {act.start_date} to {act.end_date}</p>
+                    {act.location && <p className="text-sm">Location: {act.location.city}, {act.location.county}, {act.location.state}</p>}
+                    </div>
+                </div>    
                 <div className="flex gap-3">
-                  <button onClick={() => startEdit(act)} className="text-blue-600 font-medium">Edit</button>
-                  <button onClick={() => handleDelete(act.id)} className="text-red-600 font-medium">Delete</button>
+                  <button onClick={() => startEdit(act)} className="text-blue-600 text-base"><FaEdit /></button>
+                  <button onClick={() => handleDelete(act.id)} className="text-red-600 text-base"><FaTrash /></button>
                 </div>
               </div>
             ))}

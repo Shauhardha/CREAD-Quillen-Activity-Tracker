@@ -49,3 +49,4 @@ class Activity(Base):
     # goals = relationship("StrategicGoal", secondary=activity_goals)
     # cultural_tags = relationship("CulturalWealthTag", secondary=activity_cultural_wealth)
     leads = relationship("User", secondary=activity_leads, back_populates="activities")
+    progress_updates = relationship("ProgressUpdate", back_populates="activity")

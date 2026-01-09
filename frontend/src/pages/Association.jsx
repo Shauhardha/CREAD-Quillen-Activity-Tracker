@@ -220,30 +220,6 @@ export default function ActivityAssociations({ accessToken }) {
             wealthLinks.length === 0 ? (
               <p className="text-gray-500">No cultural wealth associations yet.</p>
             ) : (
-            //   <ul className="space-y-3">
-            //     {wealthLinks.map((link) => {
-            //       const activity = link.activity || link[1];
-            //       const tag = link.tag || link[2] || link;
-            //       if (!activity || !tag) return null;
-            //       return (
-            //         <li
-            //           key={`${activity.id}-${tag.id}`}
-            //           className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-            //         >
-            //           <div>
-            //             <p className="font-medium">{activity.title || "Unknown Activity"}</p>
-            //             <p className="text-sm text-gray-600">→ {tag.name || tag.tag_name}</p>
-            //           </div>
-            //           <button
-            //             onClick={() => deleteWealthLink(activity.id, tag.id)}
-            //             className="text-red-600 hover:text-red-800 font-medium"
-            //           >
-            //             Remove
-            //           </button>
-            //         </li>
-            //       );
-            //     })}
-            //   </ul>
             <ul className="space-y-3">
                 {wealthLinks.map((link) => (
                   <li
