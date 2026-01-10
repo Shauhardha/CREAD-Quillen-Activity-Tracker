@@ -15,6 +15,8 @@ export default function ActivityDetails({ accessToken }) {
   const [activityLeads, setActivityLeads] = useState([]);
 
   const [showProgressForm, setShowProgressForm] = useState(false);
+  const [stakeholders, setStakeholders] = useState([]);
+
   const [form, setForm] = useState({
     update_date: "",
     notes: "",
@@ -49,12 +51,14 @@ export default function ActivityDetails({ accessToken }) {
       fetch(`${API_BASE}/activity-cultural-wealth/activity/${id}`, { headers }).then(r => r.json()),
       fetch(`${API_BASE}/progress-updates/?activity_id=${id}`, { headers }).then(r => r.json()),
       fetch(`${API_BASE}/activities/leads/${id}`, { headers }).then(r => r.json()),
-    ]).then(([act, gls, wts, prog, leads]) => {
+      fetch(`${API_BASE}/stakeholders/activity/${id}`, { headers }).then(r => r.json()),
+    ]).then(([act, gls, wts, prog, leads, stk]) => {
       setActivity(act);
       setGoals(gls);
       setWealthTags(wts);
       setActivityLeads(leads);
       setProgressUpdates(prog);
+      setStakeholders(stk);
     });
   }, [id]);
 
@@ -102,7 +106,7 @@ export default function ActivityDetails({ accessToken }) {
   const updateStatus = async () => {
     if (!statusValue || statusValue === activity.status) return;
 
-    console.log("Updating status to:", statusValue);
+    // console.log("Updating status to:", statusValue);
 
     setUpdatingStatus(true);
 
@@ -189,18 +193,25 @@ export default function ActivityDetails({ accessToken }) {
       </div>
 
       {/* Associations */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold mb-3">Strategic Goals</h3>
-          <ul className="list-disc pl-5 text-sm">
+          <ul className="list-disc pl-5 text-xs">
             {goals.map(g => <li key={g.goal_id}>{g.goal_name}</li>)}
           </ul>
         </div>
 
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold mb-3">Cultural Wealth Tags</h3>
-          <ul className="list-disc pl-5 text-sm">
+          <ul className="list-disc pl-5 text-xs">
             {wealthTags.map(w => <li key={w.cultural_wealth_id}>{w.cultural_wealth_name}</li>)}
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="font-semibold mb-3">Stakeholders</h3>
+          <ul className="list-disc pl-5 text-xs">
+            {stakeholders.map(s => <li key={s.stakeholder_id}>{s.stakeholder_name} ({s.role}) {s.notes && `- ${s.notes}`}</li>)}
           </ul>
         </div>
       </div>

@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, ForeignKey
+from sqlalchemy import Table, Column, Integer, ForeignKey, String, Text
 from app.database import Base
 
 # activity_goals = Table(
@@ -30,4 +30,12 @@ class ActivityCulturalWealth(Base):
     activity_id = Column(Integer, ForeignKey("activities.id"), primary_key=True)
     cultural_wealth_id = Column(Integer, ForeignKey("cultural_wealth_tags.id"), primary_key=True)
 
-
+# models/activity_stakeholder.py
+activity_stakeholders = Table(
+    "activity_stakeholders",
+    Base.metadata,
+    Column("activity_id", Integer, ForeignKey("activities.id"), primary_key=True),
+    Column("stakeholder_id", Integer, ForeignKey("stakeholders.id"), primary_key=True),
+    Column("role", String(50), default="participant"),  # Optional: lead/partner/etc.
+    Column("notes", Text, nullable=True),
+)

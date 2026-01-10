@@ -16,6 +16,7 @@ import ActivityForm from "./pages/ActivityForm";
 import Association from "./pages/Association";
 import ActivityDetails from "./pages/ActivityDetails";
 import ActivityList from "./pages/ActivityList";
+import StakeholdersManager from "./pages/StakeholdersManager";
 
 
 function HomePage() {
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/admin/users" element={<AddUserForm />} />
           <Route path="/initiatives" element={<InitiativesManager />} />
           <Route path="/partnership-types" element={<PartnershipTypes />} />
+          <Route path="/stakeholders" element={<StakeholdersManager />} />
           <Route path="/funding-sources" element={<FundingSourcesManager />} />
           <Route path="/education-levels" element={<EducationLevelsManager />} />
           <Route path="/cultural-wealth-tags" element={<CulturalWealthTagsManager />} />

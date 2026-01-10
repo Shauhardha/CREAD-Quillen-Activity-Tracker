@@ -90,6 +90,10 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
                 Partnership Types
               </NavLink>
 
+              <NavLink to="/stakeholders" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Stakeholders
+              </NavLink>
+
               <NavLink to="/funding-sources" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Funding Sources
               </NavLink>

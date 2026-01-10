@@ -3,7 +3,7 @@ from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, Foreign
 from app.database import Base
 from sqlalchemy.orm import relationship
 # from app.models.association import activity_goals
-from app.models.association import activity_leads
+from app.models.association import activity_leads, activity_stakeholders
 
 # activity_goals = Table(
 #     "activity_goals", Base.metadata,
@@ -56,3 +56,4 @@ class Activity(Base):
     # cultural_tags = relationship("CulturalWealthTag", secondary=activity_cultural_wealth)
     leads = relationship("User", secondary=activity_leads, back_populates="activities")
     progress_updates = relationship("ProgressUpdate", back_populates="activity")
+    stakeholders = relationship("Stakeholder", secondary=activity_stakeholders, back_populates="activities")
