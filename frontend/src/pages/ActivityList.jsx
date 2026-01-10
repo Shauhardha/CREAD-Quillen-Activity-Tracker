@@ -13,6 +13,8 @@ export default function ActivityList({ accessToken }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+
 
   // Add this helper function inside the component (or outside if you prefer)
   const getStatusDisplay = (status) => {
@@ -45,12 +47,40 @@ export default function ActivityList({ accessToken }) {
       .finally(() => setLoading(false));
   }, [headers]);
 
+  const filteredActivities = useMemo(() => {
+    if (!search.trim()) return activities;
+
+    const q = search.toLowerCase();
+
+    return activities.filter((act) => {
+        return (
+        act.title?.toLowerCase().includes(q) ||
+        act.description?.toLowerCase().includes(q) ||
+        act.status?.toLowerCase().includes(q) ||
+        act.location?.city?.toLowerCase().includes(q) ||
+        act.location?.county?.toLowerCase().includes(q) ||
+        act.location?.state?.toLowerCase().includes(q) ||
+        act.start_date?.toLowerCase().includes(q) ||
+        act.end_date?.toLowerCase().includes(q)
+        );
+    });
+  }, [activities, search]);
+
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Activities</h1>
 
       {error && <p className="text-red-600">{error}</p>}
       {loading && <p className="text-gray-600">Loading...</p>}
+
+      <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title, location, status, date…"
+            className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
 
       {/* Desktop Table View - hidden on mobile */}
       <div className="hidden md:block bg-white rounded-xl shadow overflow-x-auto">
@@ -65,7 +95,8 @@ export default function ActivityList({ accessToken }) {
             </tr>
           </thead>
           <tbody>
-            {activities.map(act => (
+            {/* {activities.map(act => ( */}
+            {filteredActivities.map(act => (
               <tr key={act.id} className="border-b hover:bg-gray-50">
                 <td className="p-5">
                   <div className="flex gap-3">
@@ -111,7 +142,8 @@ export default function ActivityList({ accessToken }) {
                 </td>
               </tr>
             ))}
-            {activities.length === 0 && !loading && (
+            {/* {activities.length === 0 && !loading && ( */}
+            {filteredActivities.length === 0 && !loading && (    
               <tr>
                 <td colSpan="5" className="p-8 text-center text-gray-500">
                   No activities found
@@ -124,13 +156,13 @@ export default function ActivityList({ accessToken }) {
 
       {/* Mobile Card View - hidden on desktop */}
       <div className="md:hidden space-y-4">
-        {activities.length === 0 && !loading && (
+        {filteredActivities.length === 0 && !loading && (
           <div className="text-center text-gray-500 py-8">
             No activities found
           </div>
         )}
 
-        {activities.map(act => (
+        {filteredActivities.map(act => (
           <div
             key={act.id}
             className="bg-white rounded-xl shadow p-5 space-y-4 hover:shadow-lg transition"

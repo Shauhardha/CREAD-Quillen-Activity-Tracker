@@ -123,7 +123,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               </NavLink>
             </nav>
 
-            <button onClick={onSignOut} className="mt-40 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+            <button onClick={onSignOut} className="mt-10 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
               Sign Out
             </button>
           </aside>

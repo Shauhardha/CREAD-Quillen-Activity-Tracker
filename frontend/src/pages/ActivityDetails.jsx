@@ -141,7 +141,7 @@ export default function ActivityDetails({ accessToken }) {
     <div className="max-w-5xl mx-auto p-6 space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button onClick={() => navigate(-1)} className="text-indigo-600">
-            ← Back to Activities
+            ← Back
           </button>
 
           <div className="mt-3 flex items-center gap-3">

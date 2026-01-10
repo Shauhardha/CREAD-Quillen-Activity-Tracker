@@ -17,6 +17,7 @@ import Association from "./pages/Association";
 import ActivityDetails from "./pages/ActivityDetails";
 import ActivityList from "./pages/ActivityList";
 import StakeholdersManager from "./pages/StakeholdersManager";
+import Dashboard from "./pages/Dashboard.jsx";
 
 
 function HomePage() {
@@ -65,8 +66,8 @@ export default function App() {
             />
           }
         >
-          <Route path="/" element={<Navigate to="/activitylist" replace />} />
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Dashboard />} />
           <Route path="/admin/users" element={<AddUserForm />} />
           <Route path="/initiatives" element={<InitiativesManager />} />
           <Route path="/partnership-types" element={<PartnershipTypes />} />

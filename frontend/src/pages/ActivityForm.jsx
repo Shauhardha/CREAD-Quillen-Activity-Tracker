@@ -352,7 +352,7 @@ export default function ActivityManager() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto p-2">
+    <div className="space-y-8 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold">Activity Manager</h2>  
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-xl shadow space-y-6 text-sm">
