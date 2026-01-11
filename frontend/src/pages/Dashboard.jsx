@@ -180,8 +180,8 @@ export default function ActivityList({ accessToken }) {
 
       {/* Desktop Table View - hidden on mobile */}
       <div className="hidden md:block bg-white rounded-xl shadow overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <div className=" overflow-y-auto h-[50vh]">
+        <div className=" overflow-y-auto h-[50vh]">
+        <table className="w-full text-sm text-left">          
           <thead className="bg-gray-200">
             <tr>
               <th className="p-4">Activity</th>
@@ -246,8 +246,8 @@ export default function ActivityList({ accessToken }) {
               </tr>
             )}
           </tbody>
-          </div>
         </table>
+        </div>
       </div>
 
       {/* Mobile Card View - hidden on desktop */}
