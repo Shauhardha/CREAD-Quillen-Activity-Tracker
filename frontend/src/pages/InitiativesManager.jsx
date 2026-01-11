@@ -13,8 +13,6 @@ export default function InitiativesManager() {
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
 
-  console.log("Current API_BASE:", API_BASE);
-
   // Load token ONCE
   useEffect(() => {
     const loadSession = async () => {
@@ -146,7 +144,7 @@ export default function InitiativesManager() {
 
   return (
     <div className="max-w-4xl mx-auto rounded-xl ">
-      <h2 className="text-2xl font-bold mb-8">Manage Initiatives X</h2>
+      <h2 className="text-2xl font-bold mb-8">Manage Initiatives</h2>
 
         <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
           <h3 className="text-lg font-semibold mb-2">{editingId ? "Update" : "Add"} Initiatives</h3>  
