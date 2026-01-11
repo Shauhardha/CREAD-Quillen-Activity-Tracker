@@ -9,7 +9,7 @@ from app.models.association import activity_leads
 from sqlalchemy import text
 
 router = APIRouter(
-    prefix="/activities",
+    prefix="/api/activities",
     tags=["Activity Leads"]
 )
 

@@ -11,7 +11,7 @@ from sqlalchemy.orm import joinedload  # Add this import at top if not present
 from sqlalchemy import text
 
 router = APIRouter(
-    prefix="/activities",
+    prefix="/api/activities",
     tags=["Activities"]
 )
 

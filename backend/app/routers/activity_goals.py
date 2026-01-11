@@ -11,7 +11,7 @@ from sqlalchemy import text
     
 
 router = APIRouter(
-    prefix="/activity-goals",
+    prefix="/api/activity-goals",
     tags=["Activity Goals"]
 )
 

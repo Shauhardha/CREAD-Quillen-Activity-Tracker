@@ -9,7 +9,7 @@ from app.auth import get_current_user  # your auth dependency
 from app.models.user import User
 
 router = APIRouter(
-    prefix="/progress-updates",
+    prefix="/api/progress-updates",
     tags=["Progress Updates"]
 )
 

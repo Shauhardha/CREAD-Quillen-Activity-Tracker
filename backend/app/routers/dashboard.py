@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from app.database import get_db  # adjust import if needed
 
-router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 @router.get("/activities")
 def dashboard_activities(db: Session = Depends(get_db)):

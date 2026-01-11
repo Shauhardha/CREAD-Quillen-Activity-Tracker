@@ -193,7 +193,7 @@ export default function ActivityDetails({ accessToken }) {
       </div>
 
       {/* Associations */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="font-semibold mb-3">Strategic Goals</h3>
           <ul className="list-disc pl-5 text-xs">

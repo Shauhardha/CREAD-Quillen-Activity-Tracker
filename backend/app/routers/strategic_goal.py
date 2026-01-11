@@ -9,7 +9,7 @@ from app.schemas.strategic_goal import StrategicGoalCreate, StrategicGoalOut
 from app.auth import require_admin
 
 router = APIRouter(
-    prefix="/strategic-goals",
+    prefix="/api/strategic-goals",
     tags=["Strategic Goals"]
 )
 

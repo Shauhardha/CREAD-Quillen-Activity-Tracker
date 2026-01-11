@@ -13,7 +13,7 @@ from app.auth import require_admin
 
 load_dotenv()
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 cognito = boto3_client('cognito-idp', region_name=os.getenv("COGNITO_REGION"))
 

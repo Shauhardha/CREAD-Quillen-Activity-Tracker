@@ -300,7 +300,7 @@ function AddUserForm() {
           {/* Users table */}
           <div className="mt-8 bg-white p-4 rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-3 text-black">Users List</h3>
-            <div className="h-[30vh] overflow-x-auto w-[45vh] md:w-full overflow-y-auto">
+            <div className="h-[30vh] overflow-x-auto w-[44vh] md:w-full overflow-y-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-sm text-gray-600 border-b">

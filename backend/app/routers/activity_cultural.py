@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from typing import List
 
 router = APIRouter(
-    prefix="/activity-cultural-wealth",
+    prefix="/api/activity-cultural-wealth",
     tags=["Activity Cultural Wealth"]
 )
 

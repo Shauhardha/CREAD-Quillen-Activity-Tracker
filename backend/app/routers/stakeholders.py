@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 router = APIRouter(
-    prefix="/stakeholders",
+    prefix="/api/stakeholders",
     tags=["Stakeholders"]
 )
 

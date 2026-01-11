@@ -7,7 +7,7 @@ from app.schemas.initiative import InitiativeCreate, InitiativeOut
 from app.auth import get_current_user, require_admin
 
 router = APIRouter(
-    prefix="/initiatives",
+    prefix="/api/initiatives",
     tags=["Initiatives"]
 )
 

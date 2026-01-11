@@ -9,7 +9,7 @@ from typing import List
 from sqlalchemy import text
 
 router = APIRouter(
-    prefix="/activity-stakeholders",
+    prefix="/api/activity-stakeholders",
     tags=["Activity Stakeholders"]
 )
 

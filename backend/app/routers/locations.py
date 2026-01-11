@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models.miscellaneous import Location
 
 router = APIRouter(
-    prefix="/locations",
+    prefix="/api/locations",
     tags=["Locations"]
 )
 

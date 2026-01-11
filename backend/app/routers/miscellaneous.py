@@ -22,7 +22,7 @@ from app.schemas.miscellaneous import (
     LocationCreate, LocationOut,
 )
 
-router = APIRouter(prefix="/misc", tags=["Miscellaneous"])
+router = APIRouter(prefix="/api/misc", tags=["Miscellaneous"])
 
 # --------------------------------------------------
 # Partnership Types
