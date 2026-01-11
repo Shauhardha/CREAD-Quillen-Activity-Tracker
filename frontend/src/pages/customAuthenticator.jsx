@@ -82,6 +82,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
             : `url(${bgEmail})`,
       }}
     >
+      <h1 className="fixed top-0 left-0 m-4 font-bold">CREAD-Quillen Activity Tracker</h1>
       <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md p-8">
         {step === "email" && (
           <>

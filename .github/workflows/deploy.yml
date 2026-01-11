@@ -1,0 +1,40 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "=== Backend Deploy ==="
+            cd /home/ec2-user/CREAD-Quillen-Activity-Tracker/backend
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart cread-backend
+
+            echo "=== Frontend Deploy ==="
+            cd ../frontend
+            npm install
+            npm run build
+
+            sudo rm -rf /var/www/cread/*
+            sudo cp -r dist/* /var/www/cread/
+
+            sudo systemctl restart nginx
+
+            echo "=== Deploy Complete ==="
