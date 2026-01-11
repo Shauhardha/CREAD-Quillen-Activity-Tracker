@@ -46,7 +46,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
 
       {/* Overlay */}
       {open && (
-        <div className="fixed inset-0 z-40">
+        <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black bg-opacity-10 transition-opacity" />
 
           <aside

@@ -334,7 +334,7 @@ export default function ActivityList({ accessToken }) {
         {loading ? (
           <p className="text-gray-500">Loading map data...</p>
         ) : (
-          <div className="rounded-xl overflow-hidden">
+          <div className="rounded-xl overflow-hidden z-20">
             <MapContainer center={[36.3134, -82.3535]} zoom={8} style={{ height: "500px", width: "100%" }}>
               <TileLayer
           
