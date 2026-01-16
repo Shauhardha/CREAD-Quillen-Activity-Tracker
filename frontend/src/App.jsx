@@ -19,20 +19,53 @@ import ActivityList from "./pages/ActivityList";
 import StakeholdersManager from "./pages/StakeholdersManager";
 import Dashboard from "./pages/Dashboard.jsx";
 
+/* ──────────────────────────────────────────────
+   45-MINUTE INACTIVITY AUTO-LOGOUT
+────────────────────────────────────────────── */
+const INACTIVITY_LIMIT = 45 * 60 * 1000; // 45 minutes
+let inactivityTimer = null;
 
-function HomePage() {
-  return (
-    <div className="bg-white p-6 rounded-xl shadow">
-      <h2 className="text-xl font-bold mb-2">Welcome</h2>
-      <p className="text-gray-600">You are logged in.</p>
-    </div>
+function startInactivityTimer(onLogout) {
+  const resetTimer = () => {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+
+    inactivityTimer = setTimeout(() => {
+      console.warn("Auto-logout: 45 minutes of inactivity");
+      onLogout();
+    }, INACTIVITY_LIMIT);
+  };
+
+  const events = [
+    "mousedown",
+    "mousemove",
+    "keydown",
+    "scroll",
+    "touchstart",
+    "click",
+    "focus",
+  ];
+
+  events.forEach((event) =>
+    document.addEventListener(event, resetTimer, { passive: true })
   );
+
+  resetTimer();
+
+  return () => {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    events.forEach((event) =>
+      document.removeEventListener(event, resetTimer)
+    );
+  };
 }
+
+/* ────────────────────────────────────────────── */
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /* Initial auth check */
   useEffect(() => {
     async function checkUser() {
       try {
@@ -47,12 +80,33 @@ export default function App() {
     checkUser();
   }, []);
 
+  /* Auto-logout when authenticated */
+  useEffect(() => {
+    if (!user) return;
+
+    const autoLogout = async () => {
+      try {
+        await signOut();
+      } catch (err) {
+        console.warn("Auto signOut failed", err);
+      } finally {
+        setUser(null);
+        window.location.replace("/"); // hard reset, no stale route
+      }
+    };
+
+    const cleanup = startInactivityTimer(autoLogout);
+    return cleanup;
+  }, [user]);
+
   if (loading) return null;
 
+  /* Not logged in → Auth screen */
   if (!user) {
     return <CustomAuthenticator onSignedIn={setUser} />;
   }
 
+  /* Logged in → App */
   return (
     <BrowserRouter>
       <Routes>
@@ -62,6 +116,7 @@ export default function App() {
               onSignOut={async () => {
                 await signOut();
                 setUser(null);
+                window.location.replace("/");
               }}
             />
           }
@@ -74,7 +129,10 @@ export default function App() {
           <Route path="/stakeholders" element={<StakeholdersManager />} />
           <Route path="/funding-sources" element={<FundingSourcesManager />} />
           <Route path="/education-levels" element={<EducationLevelsManager />} />
-          <Route path="/cultural-wealth-tags" element={<CulturalWealthTagsManager />} />
+          <Route
+            path="/cultural-wealth-tags"
+            element={<CulturalWealthTagsManager />}
+          />
           <Route path="/strategic-goals" element={<StrategicGoalsManager />} />
           <Route path="/activities" element={<ActivityForm />} />
           <Route path="/association" element={<Association />} />

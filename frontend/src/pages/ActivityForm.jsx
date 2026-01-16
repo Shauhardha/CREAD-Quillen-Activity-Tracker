@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
@@ -50,6 +50,7 @@ export default function ActivityManager() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
 
   /* Fetch users */
   const fetchUsers = async () => {
@@ -102,6 +103,25 @@ export default function ActivityManager() {
       setLoading(false);
     }
   };
+
+  const filteredActivities = useMemo(() => {
+      if (!search.trim()) return activities;
+
+      const q = search.toLowerCase();
+
+      return activities.filter((item) => {
+          return (
+          item.title?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q) ||
+          item.start_date?.toLowerCase().includes(q) ||
+          item.end_date?.toLowerCase().includes(q) ||
+          item.location?.city?.toLowerCase().includes(q) ||
+          item.location?.county?.toLowerCase().includes(q) ||
+          item.location?.state?.toLowerCase().includes(q) ||
+          item.status?.toLowerCase().includes(q)
+          );
+      });
+  }, [activities, search]);
 
   /* Location cascade effects */
   useEffect(() => {
@@ -457,8 +477,20 @@ export default function ActivityManager() {
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities yet.</p>
         ) : (
-          <div className="space-y-4">
-            {activities.map(act => (
+          <div>
+            
+            <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title, status, or location…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
+            <div className="overflow-x-auto h-[50vh] overflow-y-auto space-y-2">
+
+            {filteredActivities.map(act => (
               <div key={act.id} className="border rounded-lg p-4 flex justify-between items-start">
                 <div className="flex gap-0">
                     <FaClipboardCheck className="inline-block mr-2 mt-4 text-blue-500 text-2xl" />
@@ -474,6 +506,7 @@ export default function ActivityManager() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
       </div>

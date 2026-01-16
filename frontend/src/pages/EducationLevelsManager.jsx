@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -13,6 +13,7 @@ export default function EducationLevelsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [search, setSearch] = useState("");
 
   /* ===============================
      Load Auth Token
@@ -56,6 +57,19 @@ export default function EducationLevelsManager() {
       setError("Failed to load education levels");
     }
   };
+
+  const filteredEducationLevels = useMemo(() => {
+      if (!search.trim()) return levels;
+
+      const q = search.toLowerCase();
+
+      return levels.filter((item) => {
+          return (
+          item.level_name?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
+          );
+      });
+  }, [levels, search]);
 
   /* ===============================
      Create / Update
@@ -201,37 +215,48 @@ export default function EducationLevelsManager() {
           {levels.length === 0 && (
             <li className="text-gray-500 text-sm">No education levels yet.</li>
           )}
+            <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, description…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
+            <div className="overflow-x-auto h-[40vh] overflow-y-auto">
 
-          {levels.map((item) => (
-            <li
-              key={item.id}
-              className="flex justify-between items-start border rounded px-3 py-2 text-sm"
-            >
-              <div>
-                <p className="font-medium">{item.level_name}</p>
-                {item.description && (
-                  <p className="text-xs text-gray-600">{item.description}</p>
-                )}
-              </div>
+              {filteredEducationLevels.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex justify-between items-start border rounded px-3 py-2 text-sm"
+                >
+                  <div>
+                    <p className="font-medium">{item.level_name}</p>
+                    {item.description && (
+                      <p className="text-xs text-gray-600">{item.description}</p>
+                    )}
+                  </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => startEdit(item)}
-                  className="text-blue-600 text-base"
-                  disabled={loading}
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-600 text-base"
-                  disabled={loading}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </li>
-          ))}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="text-blue-600 text-base"
+                      disabled={loading}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 text-base"
+                      disabled={loading}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </div>  
         </ul>
       </div>
     </div>

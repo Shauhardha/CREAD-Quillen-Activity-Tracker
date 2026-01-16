@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -13,6 +13,7 @@ export default function FundingSourcesManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [search, setSearch] = useState("");
 
   // Load auth token ONCE
   useEffect(() => {
@@ -52,6 +53,19 @@ export default function FundingSourcesManager() {
       setError("Failed to load funding sources");
     }
   };
+
+  const filteredFundingSources = useMemo(() => {
+      if (!search.trim()) return sources;
+
+      const q = search.toLowerCase();
+
+      return sources.filter((item) => {
+          return (
+          item.source_name?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
+          );
+      });
+  }, [sources, search]);
 
   // Create / Update
   const handleSubmit = async (e) => {
@@ -190,37 +204,50 @@ export default function FundingSourcesManager() {
           {sources.length === 0 && (
             <li className="text-gray-500 text-sm">No funding sources yet.</li>
           )}
+          <div>
+            <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by source name, description…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
+            <div className="overflow-x-auto h-[30vh] overflow-y-auto">
 
-          {sources.map((item) => (
-            <li
-              key={item.id}
-              className="flex justify-between items-start border rounded px-3 py-2 text-sm"
-            >
-              <div>
-                <p className="font-medium">{item.source_name}</p>
-                {item.description && (
-                  <p className="text-xs text-gray-600">{item.description}</p>
-                )}
-              </div>
+            {filteredFundingSources.map((item) => (
+              <li
+                key={item.id}
+                className="flex justify-between items-start border rounded px-3 py-2 text-sm"
+              >
+                <div>
+                  <p className="font-medium">{item.source_name}</p>
+                  {item.description && (
+                    <p className="text-xs text-gray-600">{item.description}</p>
+                  )}
+                </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => startEdit(item)}
-                  className="text-blue-600 text-base"
-                  disabled={loading}
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-600 text-base"
-                  disabled={loading}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </li>
-          ))}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => startEdit(item)}
+                    className="text-blue-600 text-base"
+                    disabled={loading}
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="text-red-600 text-base"
+                    disabled={loading}
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              </li>
+            ))}
+            </div>
+          </div>  
         </ul>
       </div>  
     </div>

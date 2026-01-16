@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -13,6 +13,7 @@ export default function CulturalWealthTagsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [search, setSearch] = useState("");
 
   /* ===============================
      Load Auth Token
@@ -56,6 +57,19 @@ export default function CulturalWealthTagsManager() {
       setError("Failed to load cultural wealth tags");
     }
   };
+
+  const filteredTags = useMemo(() => {
+      if (!search.trim()) return tags;
+
+      const q = search.toLowerCase();
+
+      return tags.filter((item) => {
+          return (
+          item.name?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
+          );
+      });
+  }, [tags, search]);
 
   /* ===============================
      Create / Update
@@ -198,8 +212,18 @@ export default function CulturalWealthTagsManager() {
           {tags.length === 0 && (
             <li className="text-gray-500 text-sm">No cultural wealth tags yet.</li>
           )}
+          <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+          <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by source name, description…"
+              className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          </section>
+          <div className="overflow-x-auto h-[30vh] overflow-y-auto">
 
-          {tags.map((tag) => (
+          {filteredTags.map((tag) => (
             <li
               key={tag.id}
               className="flex justify-between items-start border rounded px-3 py-2 text-sm"
@@ -229,6 +253,8 @@ export default function CulturalWealthTagsManager() {
               </div>
             </li>
           ))}
+
+          </div>
         </ul>
       </div>
     </div>

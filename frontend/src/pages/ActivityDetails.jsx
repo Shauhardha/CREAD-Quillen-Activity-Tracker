@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
@@ -28,6 +28,7 @@ export default function ActivityDetails({ accessToken }) {
 
   const [statusValue, setStatusValue] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [search, setSearch] = useState("");
 
   const getStatusDisplay = (status) => {
     const map = {
@@ -62,6 +63,24 @@ export default function ActivityDetails({ accessToken }) {
     });
   }, [id]);
 
+  const filteredProgress = useMemo(() => {
+      if (!search.trim()) return progressUpdates;
+
+      const q = search.toLowerCase();
+
+      return progressUpdates.filter((item) => {
+          return (
+          item.update_date?.toLowerCase().includes(q) ||
+          item.notes?.toLowerCase().includes(q) ||
+          item.milestones?.toLowerCase().includes(q) ||
+          item.quantitative_outcome?.toLowerCase().includes(q) ||
+          item.qualitative_outcome?.toLowerCase().includes(q) ||
+          item.evaluation_tool_reference?.toLowerCase().includes(q)
+          );
+      });
+  }, [progressUpdates, search]);
+
+  
   useEffect(() => {
     if (activity?.status) {
       setStatusValue(activity.status);
@@ -223,10 +242,19 @@ export default function ActivityDetails({ accessToken }) {
         <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">Progress Updates</h3>
             <button
-            onClick={() => setShowProgressForm(!showProgressForm)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+              onClick={() => {
+                setShowProgressForm(prev => !prev);
+
+                // wait for the DOM to update if the form appears
+                setTimeout(() => {
+                  document
+                    .getElementById("add_new_progress")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 0);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
             >
-            {showProgressForm ? "Cancel" : "Add Update"}
+              {showProgressForm ? "Cancel" : "Add Update"}
             </button>
         </div>
 
@@ -236,75 +264,90 @@ export default function ActivityDetails({ accessToken }) {
             No progress updates recorded yet.
             </p>
         ) : (
-            <ul className="space-y-4">
-            {progressUpdates.map(p => (
-                <li
-                key={p.id}
-                className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:shadow-sm transition"
-                >
-                {/* Date */}
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-semibold text-indigo-600">
-                    {new Date(p.update_date).toLocaleDateString()}
-                    </span>
-                </div>
+            <div> 
+              <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+              <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by date, notes, milestones, etc…"
+                  className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              </section>
+              <div className="overflow-x-auto h-[60vh] overflow-y-auto"> 
 
-                {/* Notes */}
-                {p.notes && (
-                    <p className="text-sm text-gray-700 mb-1">
-                    <span className="font-medium text-gray-800">Notes:</span>{" "}
-                    {p.notes}
-                    </p>
-                )}
-
-                {/* Milestones */}
-                {p.milestones && (
-                    <p className="text-sm text-gray-700 mb-1">
-                    <span className="font-medium text-gray-800">Milestones:</span>{" "}
-                    {p.milestones}
-                    </p>
-                )}
-
-                {/* Outcomes */}
-                <div className="grid md:grid-cols-2 gap-3 mt-2">
-                    {p.quantitative_outcome && (
-                    <div className="bg-white border rounded-lg p-3">
-                        <p className="text-xs uppercase text-gray-500 font-semibold mb-1">
-                        Quantitative Outcome
-                        </p>
-                        <p className="text-sm text-gray-700">
-                        {p.quantitative_outcome}
-                        </p>
+                <ul className="space-y-4">
+                {filteredProgress.map(p => (
+                    <li
+                    key={p.id}
+                    className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:shadow-sm transition"
+                    >
+                    {/* Date */}
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-semibold text-indigo-600">
+                        {new Date(p.update_date).toLocaleDateString()}
+                        </span>
                     </div>
+
+                    {/* Notes */}
+                    {p.notes && (
+                        <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-medium text-gray-800">Notes:</span>{" "}
+                        {p.notes}
+                        </p>
                     )}
 
-                    {p.qualitative_outcome && (
-                    <div className="bg-white border rounded-lg p-3">
-                        <p className="text-xs uppercase text-gray-500 font-semibold mb-1">
-                        Qualitative Outcome
+                    {/* Milestones */}
+                    {p.milestones && (
+                        <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-medium text-gray-800">Milestones:</span>{" "}
+                        {p.milestones}
                         </p>
-                        <p className="text-sm text-gray-700">
-                        {p.qualitative_outcome}
-                        </p>
-                    </div>
                     )}
-                </div>
 
-                {/* Evaluation Tool */}
-                {p.evaluation_tool_reference && (
-                    <p className="text-xs text-gray-500 mt-2">
-                    Evaluation Tool:{" "}
-                    <span className="font-medium text-gray-700">
-                        {p.evaluation_tool_reference}
-                    </span>
-                    </p>
-                )}
-                </li>
-            ))}
-            </ul>
+                    {/* Outcomes */}
+                    <div className="grid md:grid-cols-2 gap-3 mt-2">
+                        {p.quantitative_outcome && (
+                        <div className="bg-white border rounded-lg p-3">
+                            <p className="text-xs uppercase text-gray-500 font-semibold mb-1">
+                            Quantitative Outcome
+                            </p>
+                            <p className="text-sm text-gray-700">
+                            {p.quantitative_outcome}
+                            </p>
+                        </div>
+                        )}
+
+                        {p.qualitative_outcome && (
+                        <div className="bg-white border rounded-lg p-3">
+                            <p className="text-xs uppercase text-gray-500 font-semibold mb-1">
+                            Qualitative Outcome
+                            </p>
+                            <p className="text-sm text-gray-700">
+                            {p.qualitative_outcome}
+                            </p>
+                        </div>
+                        )}
+                    </div>
+
+                    {/* Evaluation Tool */}
+                    {p.evaluation_tool_reference && (
+                        <p className="text-xs text-gray-500 mt-2">
+                        Evaluation Tool:{" "}
+                        <span className="font-medium text-gray-700">
+                            {p.evaluation_tool_reference}
+                        </span>
+                        </p>
+                    )}
+                    </li>
+                ))}
+                </ul>
+              </div>  
+            </div>  
         )}
 
         {/* Add Progress Form */}
+        <div id="add_new_progress">
         {showProgressForm && (
             <form
             onSubmit={submitProgress}
@@ -372,6 +415,7 @@ export default function ActivityDetails({ accessToken }) {
             </button>
             </form>
         )}
+        </div>
         </div>
     </div>
   );

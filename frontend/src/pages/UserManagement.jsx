@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { API_BASE } from '../config';
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaSave, FaEdit, FaTimesCircle } from "react-icons/fa";
@@ -19,6 +19,8 @@ function AddUserForm() {
   const [token, setToken] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', role: 'staff', is_active: true });
+
+  const [search, setSearch] = useState("");
 
   // Ensure form is cleared each time the component mounts (prevents stale values/autofill remnants)
   useEffect(() => {
@@ -137,6 +139,20 @@ function AddUserForm() {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const filteredUsers = useMemo(() => {
+    if (!search.trim()) return users;
+
+    const q = search.toLowerCase();
+
+    return users.filter((user) => {
+        return (
+        user.name?.toLowerCase().includes(q) ||
+        user.email?.toLowerCase().includes(q) ||
+        user.role?.toLowerCase().includes(q) 
+        );
+    });
+  }, [users, search]);
 
   const startEdit = (user) => {
     setEditingId(user.id);
@@ -300,6 +316,17 @@ function AddUserForm() {
           {/* Users table */}
           <div className="mt-8 bg-white p-4 rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-3 text-black">Users List</h3>
+
+            <section className="border-single mb-4 border-b-2 py-3 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, role…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
+
             <div className="h-[30vh] overflow-x-auto w-[44vh] md:w-full overflow-y-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -312,7 +339,7 @@ function AddUserForm() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr key={u.id} className="border-b text-[11px] md:text-sm">
                       <td className="py-2 px-3">
                         {editingId === u.id ? (

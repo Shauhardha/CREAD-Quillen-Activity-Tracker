@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -35,6 +35,7 @@ export default function StakeholdersManager({ accessToken }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
 
   /* Load reference data */
   useEffect(() => {
@@ -56,6 +57,22 @@ export default function StakeholdersManager({ accessToken }) {
       setLoading(false);
     }
   };
+
+  const filteredItems = useMemo(() => {
+      if (!search.trim()) return stakeholders;
+
+      const q = search.toLowerCase();
+
+      return stakeholders.filter((item) => {
+          return (
+          item.name?.toLowerCase().includes(q) ||
+          item.organization?.toLowerCase().includes(q) ||
+          item.email?.toLowerCase().includes(q) ||
+          item.phone?.toLowerCase().includes(q) ||
+          item.organization?.toLowerCase().includes(q) 
+          );
+      });
+  }, [stakeholders, search]);
 
   /* Location cascade effects (copied from ActivityManager) */
   useEffect(() => {
@@ -336,8 +353,18 @@ export default function StakeholdersManager({ accessToken }) {
             ) : stakeholders.length === 0 ? (
             <p className="text-gray-500">No stakeholders yet.</p>
             ) : (
-            <div className="space-y-4">
-                {stakeholders.map(st => (
+            <div>
+                <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+                <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name, organization or email…"
+                    className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                </section>
+                <div className="overflow-x-auto h-[50vh] overflow-y-auto">
+                {filteredItems.map(st => (
                 <div key={st.id} className="border rounded-lg p-4 flex justify-between items-start text-sm">
                     <div>
                     <h3 className="font-semibold">{st.name}</h3>
@@ -365,6 +392,7 @@ export default function StakeholdersManager({ accessToken }) {
                     </div>
                 </div>
                 ))}
+                </div>
             </div>
             )}
         </div>

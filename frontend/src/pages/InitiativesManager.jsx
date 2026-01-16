@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaSave, FaEdit, FaTimesCircle } from "react-icons/fa";
@@ -12,6 +12,7 @@ export default function InitiativesManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [search, setSearch] = useState("");
 
   // Load token ONCE
   useEffect(() => {
@@ -58,6 +59,19 @@ export default function InitiativesManager() {
       setError("Failed to load initiatives - check network or server");
     }
   };
+
+  const filteredInitiatives = useMemo(() => {
+    if (!search.trim()) return initiatives;
+
+    const q = search.toLowerCase();
+
+    return initiatives.filter((initiative) => {
+        return (
+        initiative.name?.toLowerCase().includes(q) 
+        );
+    });
+  }, [initiatives, search]);
+
 
   // Create or Update
   const handleSubmit = async (e) => {
@@ -185,11 +199,20 @@ export default function InitiativesManager() {
           
           <h3 className="text-lg font-semibold mt-8 mb-2">Existing Initiatives</h3>
           <ul className="space-y-2">
+            <section className="border-single mb-4 border-b-2 py-3 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search initiatives…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
             {initiatives.length === 0 && (
               <li className="text-gray-500 text-sm">No initiatives yet.</li>
             )}
 
-            {initiatives.map((initiative) => (
+            {filteredInitiatives.map((initiative) => (
               <li
                 key={initiative.id}
                 className="flex justify-between items-center border rounded px-3 py-2 text-xs md:text-sm"

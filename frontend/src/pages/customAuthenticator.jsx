@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signIn, confirmSignIn, getCurrentUser } from "aws-amplify/auth";
 
 import bgEmail from "../assets/auth-bg-1.jpg";
@@ -13,6 +13,16 @@ export default function CustomAuthenticator({ onSignedIn }) {
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [user, setUser] = useState(null); 
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  useEffect(() => {
+  if (step === "email") 
+    emailRef.current?.focus(); 
+  else if (step === "password") {
+    passwordRef.current?.focus();
+  }
+}, [step]);
 
   async function handleEmailSubmit(e) {
     e.preventDefault();
@@ -97,6 +107,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
                   Email address
                 </label>
                 <input
+                  ref={emailRef}
                   type="email"
                   required
                   value={email}
@@ -128,6 +139,7 @@ export default function CustomAuthenticator({ onSignedIn }) {
                   Password
                 </label>
                 <input
+                  ref={passwordRef}
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaSave, FaEdit, FaTimesCircle } from "react-icons/fa";
@@ -9,6 +9,7 @@ export default function PartnershipTypes({ accessToken }) {
 	const [loading, setLoading] = useState(false);
 	const [form, setForm] = useState({ id: null, type_name: "", description: "" });
 	const [editing, setEditing] = useState(false);
+    const [search, setSearch] = useState("");
 
 	useEffect(() => {
 		fetchList();
@@ -35,6 +36,19 @@ export default function PartnershipTypes({ accessToken }) {
 			setLoading(false);
 		}
 	}
+
+    const filteredItems = useMemo(() => {
+        if (!search.trim()) return items;
+
+        const q = search.toLowerCase();
+
+        return items.filter((item) => {
+            return (
+            item.type_name?.toLowerCase().includes(q) ||
+            item.description?.toLowerCase().includes(q) 
+            );
+        });
+    }, [items, search]);
 
 	function resetForm() {
 		setForm({ id: null, type_name: "", description: "" });
@@ -176,40 +190,51 @@ export default function PartnershipTypes({ accessToken }) {
                     ) : items.length === 0 ? (
                         <div className="text-sm text-gray-500">No partnership types found.</div>
                     ) : (
-                        <div className="overflow-x-auto h-[40vh] overflow-y-auto">
-                            <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
-                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Description</th>
-                                        <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-100 text-[11px] md:text-sm">
-                                    {items.map((it) => (
-                                        <tr key={it.id}>
-                                            <td className="px-4 py-2 align-top">{it.type_name}</td>
-                                                <td className="px-4 py-2 align-top break-words whitespace-normal max-w-[40ch]">{it.description}</td>
-                                            <td className="px-4 py-2 align-top">
-                                                <div className="flex justify-end gap-1">
-                                                    <button
-                                                    onClick={() => handleEdit(it)}
-                                                    className="px-3 py-1 rounded text-base text-blue-600"
-                                                    >
-                                                    <FaEdit />
-                                                    </button>
-                                                    <button
-                                                    onClick={() => handleDelete(it)}
-                                                    className="px-3 py-1 text-red-600 rounded text-base"
-                                                    >
-                                                    <FaTrash />
-                                                    </button>
-                                                </div>
-                                            </td>
+                        <div>
+                            <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search initiatives…"
+                                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            </section>
+                            <div className="overflow-x-auto h-[50vh] overflow-y-auto">
+                                <table className="min-w-full divide-y divide-gray-200 table-fixed w-full">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
+                                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Description</th>
+                                            <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-100 text-[11px] md:text-sm">
+                                        {filteredItems.map((it) => (
+                                            <tr key={it.id}>
+                                                <td className="px-4 py-2 align-top">{it.type_name}</td>
+                                                    <td className="px-4 py-2 align-top break-words whitespace-normal max-w-[40ch]">{it.description}</td>
+                                                <td className="px-4 py-2 align-top">
+                                                    <div className="flex justify-end gap-1">
+                                                        <button
+                                                        onClick={() => handleEdit(it)}
+                                                        className="px-3 py-1 rounded text-base text-blue-600"
+                                                        >
+                                                        <FaEdit />
+                                                        </button>
+                                                        <button
+                                                        onClick={() => handleDelete(it)}
+                                                        className="px-3 py-1 text-red-600 rounded text-base"
+                                                        >
+                                                        <FaTrash />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </div>

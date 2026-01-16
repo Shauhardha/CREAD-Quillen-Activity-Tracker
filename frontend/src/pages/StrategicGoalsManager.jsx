@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -18,6 +18,7 @@ export default function StrategicGoalsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(null);
+  const [search, setSearch] = useState("");
 
   // Load auth token
   useEffect(() => {
@@ -57,6 +58,20 @@ export default function StrategicGoalsManager() {
       setError(err.message);
     }
   };
+
+  const filteredGoals = useMemo(() => {
+      if (!search.trim()) return goals;
+
+      const q = search.toLowerCase();
+
+      return goals.filter((item) => {
+          return (
+          item.goal_name?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q) ||
+          item.goal_term?.toLowerCase().includes(q)
+          );
+      });
+  }, [goals, search]);
 
   const fetchInitiatives = async () => {
     try {
@@ -210,7 +225,17 @@ export default function StrategicGoalsManager() {
         <h3 className="text-lg font-semibold mb-2">Existing Goals</h3>
         <ul className="space-y-2">
             {goals.length === 0 && <li className="text-gray-500 text-sm">No goals yet.</li>}
-            {goals.map((g) => (
+            <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
+            <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by source name, description, goal term…"
+                className="w-full border border-1 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            </section>
+            <div className="overflow-x-auto h-[40vh] overflow-y-auto">
+            {filteredGoals.map((g) => (
             <li key={g.id} className="flex justify-between items-center border rounded px-3 py-2 text-sm">
                 <div>
                 <p className="font-medium">{g.goal_name}</p>
@@ -232,6 +257,7 @@ export default function StrategicGoalsManager() {
                 </div>
             </li>
             ))}
+            </div>
         </ul>
       </div>  
     </div>

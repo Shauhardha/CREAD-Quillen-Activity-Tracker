@@ -69,7 +69,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               </button>
             </div>
 
-            <nav className="space-y-2 flex-1 text-sm">
+            <nav className="space-y-1 md:space-y-2 flex-1 text-sm">
               <NavLink to="/home" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Home
               </NavLink>
