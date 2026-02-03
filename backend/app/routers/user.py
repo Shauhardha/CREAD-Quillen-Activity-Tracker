@@ -13,6 +13,12 @@ from app.auth import require_admin
 
 load_dotenv()
 
+print("🔍 ENV CHECK")
+print("COGNITO_REGION:", os.getenv("COGNITO_REGION"))
+print("COGNITO_USER_POOL_ID:", os.getenv("COGNITO_USER_POOL_ID"))
+print("AWS_ACCESS_KEY_ID exists:", bool(os.getenv("AWS_ACCESS_KEY_ID")))
+print("AWS_SECRET_ACCESS_KEY exists:", bool(os.getenv("AWS_SECRET_ACCESS_KEY")))
+
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 cognito = boto3_client('cognito-idp', region_name=os.getenv("COGNITO_REGION"))
@@ -69,6 +75,9 @@ def add_user(
         return {"message": "User added", "sub": sub, "id": new_user.id}
 
     except Exception as e:
+        print("❌ admin_create_user FAILED")
+        print("ERROR TYPE:", type(e))
+        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
