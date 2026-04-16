@@ -33,7 +33,7 @@ export default function AuthenticatedLayout({ onSignOut }) {
       }}
     >
       <Sidebar isAdmin={isAdmin} onSignOut={onSignOut} />
-      <UserProfile groups={groups} />
+      <UserProfile groups={groups} onSignOut={onSignOut} />
 
       <main className="flex-1 p-6 flex justify-center mt-10">
         <div className="w-full max-w-4xl">

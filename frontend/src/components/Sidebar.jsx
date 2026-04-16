@@ -1,37 +1,103 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 
+/* ── Group definitions ────────────────────────────────────────────── */
+const GROUPS = [
+  {
+    key: "overview",
+    label: "Overview",
+    links: [
+      { to: "/home",          label: "Home" },
+      { to: "/activitylist",  label: "Activity List" },
+      { to: "/calendar",      label: "Calendar" },
+      { to: "/visualizations",label: "Visualizations" },
+    ],
+  },
+  {
+    key: "activities",
+    label: "Activities +",
+    links: [
+      { to: "/activity-types", label: "Activity Types" },
+      { to: "/activities",     label: "Add Activities" },
+      { to: "/association",    label: "Associate Activities" },
+    ],
+  },
+  {
+    key: "reference",
+    label: "Reference Data",
+    links: [
+      { to: "/partnership-types",   label: "Partnership Types" },
+      { to: "/stakeholders",        label: "Stakeholders" },
+      { to: "/funding-sources",     label: "Funding Sources" },
+      { to: "/education-levels",    label: "Education Levels" },
+      { to: "/cultural-wealth-tags",label: "Cultural Wealth Tags" },
+      { to: "/strategic-goals",     label: "Strategic Goals" },
+    ],
+  },
+  {
+    key: "settings",
+    label: "Settings",
+    adminOnly: true,
+    links: [
+      { to: "/admin/users",  label: "Add User" },
+      { to: "/initiatives",  label: "Manage Initiatives" },
+    ],
+  },
+];
+
+/* ── Component ────────────────────────────────────────────────────── */
 export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
-  const [open, setOpen] = useState(initialOpen);
-  const baseBtn = "block w-full text-left px-4 py-2 rounded hover:bg-gray-200";
-  const active = "bg-blue-600 text-white hover:bg-blue-700";
+  const [open,        setOpen]        = useState(initialOpen);
+  const [activeGroup, setActiveGroup] = useState(null);   // accordion: one open at a time
+  const [expandAll,   setExpandAll]   = useState(false);  // override: all open
   const panelRef = useRef(null);
 
+  const baseLink   = "block w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-200 text-[12px] transition";
+  const activeLink = "bg-blue-600 text-white hover:bg-blue-500 hover:text-white";
+
+  /* ── Outside click + Escape ─────────────────────────────────────── */
   useEffect(() => {
     function handleOutside(e) {
       if (!open) return;
-      if (panelRef.current && !panelRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
     }
-
-    function handleEsc(e) {
-      if (e.key === "Escape") setOpen(false);
-    }
-
-    document.addEventListener("mousedown", handleOutside);
+    function handleEsc(e) { if (e.key === "Escape") setOpen(false); }
+    document.addEventListener("mousedown",  handleOutside);
     document.addEventListener("touchstart", handleOutside);
-    document.addEventListener("keydown", handleEsc);
+    document.addEventListener("keydown",    handleEsc);
     return () => {
-      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("mousedown",  handleOutside);
       document.removeEventListener("touchstart", handleOutside);
-      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("keydown",    handleEsc);
     };
   }, [open]);
 
+  /* ── Helpers ────────────────────────────────────────────────────── */
+  const isGroupOpen = (key) => expandAll || activeGroup === key;
+
+  const toggleGroup = (key) => {
+    if (expandAll) {
+      // collapse all-expanded mode → open only the clicked group
+      setExpandAll(false);
+      setActiveGroup(key);
+    } else {
+      // accordion: open clicked, close others (click again to close)
+      setActiveGroup(prev => (prev === key ? null : key));
+    }
+  };
+
+  const handleExpandAll = (checked) => {
+    setExpandAll(checked);
+    if (!checked) setActiveGroup(null);
+  };
+
+  const visibleGroups = GROUPS.filter(g => !g.adminOnly || isAdmin);
+
+  /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <>
-      {/* Toggle button - visible when closed */}
+      {/* Hamburger toggle (visible when sidebar is closed) */}
       {!open && (
         <button
           aria-label="Open menu"
@@ -44,20 +110,20 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
         </button>
       )}
 
-      {/* Overlay */}
+      {/* Overlay + panel */}
       {open && (
         <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-10 transition-opacity" />
+          <div className="absolute inset-0 bg-black bg-opacity-10" />
 
           <aside
             ref={panelRef}
-            className="relative w-60 bg-white shadow h-full p-4 transform transition-transform duration-200"
-            style={{ willChange: "transform" }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+            className="relative w-60 bg-white shadow-xl h-full flex flex-col"
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Activity Tracker</h2>
+            {/* ── Header ──────────────────────────────────────────── */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 shrink-0">
+              <h2 className="text-lg font-bold text-gray-800">Activity Tracker</h2>
               <button
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}
@@ -69,75 +135,66 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               </button>
             </div>
 
-            <nav className="space-y-1 md:space-y-1 flex-1 text-[12px]">
-              <NavLink to="/home" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Home
-              </NavLink>
+            {/* ── Expand-all checkbox ──────────────────────────────── */}
+            <div className="px-4 py-2.5 border-b border-gray-100 shrink-0">
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={expandAll}
+                  onChange={e => handleExpandAll(e.target.checked)}
+                  className="rounded accent-blue-600"
+                />
+                Expand all sections
+              </label>
+            </div>
 
-              {isAdmin && (
-                <NavLink to="/admin/users" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                  Add User
-                </NavLink>
-              )}
+            {/* ── Scrollable nav ───────────────────────────────────── */}
+            <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+              {visibleGroups.map(group => (
+                <div key={group.key} className="mb-1">
 
-              {isAdmin && (
-                <NavLink to="/initiatives" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                  Manage Initiatives
-                </NavLink>
-              )}
+                  {/* Group header button */}
+                  <button
+                    onClick={() => toggleGroup(group.key)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11.5px] font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50 hover:text-gray-600 transition"
+                  >
+                    <span>{group.label}</span>
+                    {isGroupOpen(group.key)
+                      ? <FaChevronDown size={9} />
+                      : <FaChevronRight size={9} />
+                    }
+                  </button>
 
-              <NavLink to="/partnership-types" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Partnership Types
-              </NavLink>
-
-              <NavLink to="/activity-types" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Activity Types
-              </NavLink>
-
-              <NavLink to="/stakeholders" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Stakeholders
-              </NavLink>
-
-              <NavLink to="/funding-sources" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Funding Sources
-              </NavLink>
-
-              <NavLink to="/education-levels" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Education Levels
-              </NavLink>
-
-              <NavLink to="/cultural-wealth-tags" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Cultural Wealth Tags
-              </NavLink>
-
-              <NavLink to="/strategic-goals" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Strategic Goals
-              </NavLink>
-
-              <NavLink to="/activities" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Add Activities
-              </NavLink>
-
-              <NavLink to="/association" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Associate Activities
-              </NavLink>
-
-              <NavLink to="/activitylist" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Activities List
-              </NavLink>
-
-              <NavLink to="/calendar" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Calendar
-              </NavLink>
-
-              <NavLink to="/visualizations" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
-                Visualizations
-              </NavLink>
+                  {/* Group links (animated-ish via conditional render) */}
+                  {isGroupOpen(group.key) && (
+                    <div className="ml-2 mt-0.5 pl-2 border-l-2 font-semibold border-blue-100 space-y-0.5">
+                      {group.links.map(link => (
+                        <NavLink
+                          key={link.to}
+                          to={link.to}
+                          // onClick={() => setOpen(false)}
+                          className={({ isActive }) =>
+                            `${baseLink} ${isActive ? activeLink : "text-gray-700"}`
+                          }
+                        >
+                          {link.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </nav>
 
-            <button onClick={onSignOut} className="mt-10 bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700">
-              Sign Out
-            </button>
+            {/* ── Sign Out ─────────────────────────────────────────── */}
+            <div className="px-4 py-4 border-t border-gray-100 shrink-0">
+              <button
+                onClick={onSignOut}
+                className="w-full bg-indigo-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+              >
+                Sign Out
+              </button>
+            </div>
           </aside>
         </div>
       )}

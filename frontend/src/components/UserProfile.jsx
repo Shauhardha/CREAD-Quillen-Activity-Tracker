@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchUserAttributes, updatePassword } from "aws-amplify/auth";
 import {
-  FaUser, FaKey, FaEye, FaEyeSlash, FaCheckCircle, FaEnvelope, FaShieldAlt,
+  FaUser, FaKey, FaEye, FaEyeSlash, FaCheckCircle, FaEnvelope, FaShieldAlt, FaSignOutAlt,
 } from "react-icons/fa";
 
-export default function UserProfile({ groups = [] }) {
+export default function UserProfile({ groups = [], onSignOut }) {
   const [open,        setOpen]        = useState(false);
   const [attrs,       setAttrs]       = useState(null);
   const [showPwForm,  setShowPwForm]  = useState(false);
@@ -271,8 +271,21 @@ export default function UserProfile({ groups = [] }) {
                 </button>
               </form>
             )}
+            {/* Divider */}
+            <div className="border-t border-gray-100" />
 
+            {/* Sign Out */}
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="flex items-center gap-2 w-full text-sm font-semibold text-red-500 hover:text-red-700 transition"
+              >
+                <FaSignOutAlt size={15} />
+                Sign Out
+              </button>
+            )}
           </div>
+          
         </div>
       )}
     </div>
