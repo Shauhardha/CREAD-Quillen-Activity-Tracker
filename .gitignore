@@ -61,4 +61,6 @@ pytest_cache/
 
 # Misc
 *.local
-""
+
+# Claude Code worktrees
+.claude/worktrees/
