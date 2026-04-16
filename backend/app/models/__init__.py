@@ -10,4 +10,6 @@ from .miscellaneous import (
     PartnershipType,
     FundingSource,
     CulturalWealthTag,
+    ActivityType
 )
+from .milestone import Milestone

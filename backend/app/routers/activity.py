@@ -44,17 +44,64 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user
     return activity
 
 
+@router.get("/export")
+def export_activities(db: Session = Depends(get_db)):
+    query = text("""
+        SELECT
+            a.id,
+            a.title,
+            a.description,
+            COALESCE(at.activityType_name, '') AS activity_type,
+            a.status,
+            COALESCE(i.name, '')              AS initiative,
+            a.start_date,
+            a.end_date,
+            COALESCE(a.primary_audience, '')  AS primary_audience,
+            COALESCE(l.city, '')              AS city,
+            COALESCE(l.county, '')            AS county,
+            COALESCE(l.state, '')             AS state,
+            COALESCE(e.level_name, '')        AS education_level,
+            COALESCE(p.type_name, '')         AS partnership_type,
+            COALESCE(f.source_name, '')       AS funding_source,
+            COALESCE(f.source_type, '')       AS funding_source_type,
+            a.funding_amount,
+            (
+                SELECT GROUP_CONCAT(u.name ORDER BY u.name SEPARATOR ', ')
+                FROM activity_leads al
+                JOIN users u ON u.id = al.user_id
+                WHERE al.activity_id = a.id
+            )                                 AS lead_staff,
+            COALESCE(a.deliverables, '')      AS deliverables,
+            COALESCE(a.intended_outcomes, '') AS intended_outcomes,
+            COALESCE(a.evidence, '')          AS evidence,
+            COALESCE(a.sustainability_plan, '') AS sustainability_plan,
+            COALESCE(a.notes, '')             AS notes
+        FROM activities a
+        LEFT JOIN activity_types at ON at.id = a.activity_type_id
+        LEFT JOIN initiatives i     ON i.id  = a.initiative_id
+        LEFT JOIN locations l       ON l.id  = a.location_id
+        LEFT JOIN education_levels e ON e.id = a.education_level_id
+        LEFT JOIN partnership_types p ON p.id = a.partnership_type_id
+        LEFT JOIN funding_sources f  ON f.id  = a.funding_source_id
+        WHERE a.deleted_at IS NULL
+        ORDER BY a.title
+    """)
+    return db.execute(query).mappings().all()
+
+
 @router.get("/", response_model=list[ActivityOut])
 def get_activities(db: Session = Depends(get_db)):
     activities = (
         db.query(Activity)
-        .options(joinedload(Activity.location))  # <-- THIS LINE IS CRITICAL
-        .filter(Activity.deleted_at.is_(None))   # <-- Also fix NULL check
+        .options(joinedload(Activity.location))
+        .options(joinedload(Activity.activity_type))
+        .filter(Activity.deleted_at.is_(None))
         .all()
     )
 
     for a in activities:
         a.lead_staff_ids = [u.id for u in a.leads]
+        a.activity_type_name = a.activity_type.activityType_name if a.activity_type else None
 
     return activities
 
@@ -64,13 +111,15 @@ def get_activity(id: int, db: Session = Depends(get_db)):
     activity = (
         db.query(Activity)
         .options(joinedload(Activity.location))
+        .options(joinedload(Activity.activity_type))
         .filter(Activity.id == id)
         .first()
     )
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
-    
+
     activity.lead_staff_ids = [u.id for u in activity.leads]
+    activity.activity_type_name = activity.activity_type.activityType_name if activity.activity_type else None
     return activity
 
 
@@ -141,13 +190,22 @@ def get_activity(id: int, db: Session = Depends(get_db)):
             a.funding_source_id, 
             f.source_name AS funding_name, 
             f.description AS funding_desc,
-            a.notes
+            a.notes,
+            a.activity_type_id,
+            a.primary_audience,
+            a.funding_amount,
+            a.deliverables,
+            a.intended_outcomes,
+            a.evidence,
+            a.sustainability_plan,
+            at.activityType_name AS activity_type_name
         FROM activities a
         LEFT JOIN initiatives i ON i.id = a.initiative_id
         LEFT JOIN locations l ON l.id = a.location_id
         LEFT JOIN education_levels e ON e.id = a.education_level_id
         LEFT JOIN partnership_types p ON p.id = a.partnership_type_id
         LEFT JOIN funding_sources f ON f.id = a.funding_source_id
+        LEFT JOIN activity_types at ON at.id = a.activity_type_id
         WHERE a.id = :id
     """)
 
@@ -181,6 +239,14 @@ def get_activity(id: int, db: Session = Depends(get_db)):
         "notes": result.notes,
         # Keep this if your ActivityOut expects it
         "lead_staff_ids": [],  # You'll need to fetch separately or add another join
+        "activity_type_id": result.activity_type_id,
+        "activity_type_name": result.activity_type_name,
+        "primary_audience": result.primary_audience,
+        "funding_amount": result.funding_amount,
+        "deliverables": result.deliverables,
+        "intended_outcomes": result.intended_outcomes,
+        "evidence": result.evidence,
+        "sustainability_plan": result.sustainability_plan
     }
 
     # Note: lead_staff_ids still needs separate handling (see below)

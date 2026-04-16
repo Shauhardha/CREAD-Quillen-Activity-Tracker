@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, TIMESTAMP, Boolean, Text, DECIMAL
+from sqlalchemy import Column, Integer, String, Enum, TIMESTAMP, Boolean, Text, DECIMAL, Float
 from app.database import Base
 
 class PartnershipType(Base):
@@ -13,6 +13,8 @@ class FundingSource(Base):
     id = Column(Integer, primary_key=True)
     source_name = Column(String(255), nullable=False)
     description = Column(Text)
+    source_type = Column(String(255))
+    funding_amount = Column(Float)
     deleted_at = Column(TIMESTAMP, nullable=True)
 
 class EducationLevel(Base):
@@ -39,3 +41,10 @@ class Location(Base):
     longitude = Column(DECIMAL(10,7))
     description = Column(Text)
     deleted_at = Column(TIMESTAMP, nullable=True)
+
+class ActivityType(Base):
+    __tablename__ = "activity_types"
+    id = Column(Integer, primary_key=True)
+    activityType_name = Column(String(255), nullable=False)
+    description = Column(Text)
+    deleted_at = Column(TIMESTAMP, nullable=True)      

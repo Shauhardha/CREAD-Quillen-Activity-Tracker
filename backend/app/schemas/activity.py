@@ -31,6 +31,13 @@ class ActivityCreate(BaseModel):
     lead_staff_ids: list[int] = []
     # goal_ids: Optional[List[int]] = []
     # cultural_tag_ids: Optional[List[int]] = []
+    activity_type_id: Optional[int]
+    primary_audience: Optional[str]
+    funding_amount: Optional[float]
+    deliverables: Optional[str]
+    intended_outcomes: Optional[str]
+    evidence: Optional[str]
+    sustainability_plan: Optional[str]
 
 class ActivityStatusUpdate(BaseModel):
     status: Literal["planned", "in_progress", "completed"]    
@@ -50,6 +57,14 @@ class ActivityOut(BaseModel):
     funding_source_id: Optional[int]
     notes: Optional[str]
     lead_staff_ids: List[int] = []
+    activity_type_id: Optional[int]
+    activity_type_name: Optional[str] = None
+    primary_audience: Optional[str]
+    funding_amount: Optional[float]
+    deliverables: Optional[str]
+    intended_outcomes: Optional[str]
+    evidence: Optional[str]
+    sustainability_plan: Optional[str]
 
     class Config:
         from_attributes = True

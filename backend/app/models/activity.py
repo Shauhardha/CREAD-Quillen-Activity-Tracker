@@ -1,5 +1,5 @@
 # app/models/activities.py
-from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP, func
+from sqlalchemy import Table, Column, Integer, String, Text, Enum, Date, ForeignKey, TIMESTAMP, func, Float
 from app.database import Base
 from sqlalchemy.orm import relationship
 # from app.models.association import activity_goals
@@ -42,6 +42,13 @@ class Activity(Base):
         onupdate=func.now(),           # ← This is the magic!
         nullable=False
     )
+    activity_type_id = Column(Integer, ForeignKey("activity_types.id"))
+    primary_audience = Column(String(255))
+    funding_amount = Column(Float)
+    deliverables = Column(Text)
+    intended_outcomes = Column(Text)
+    evidence = Column(Text)
+    sustainability_plan = Column(Text)
 
     # Relationships
     initiative = relationship("Initiative")
@@ -57,3 +64,4 @@ class Activity(Base):
     leads = relationship("User", secondary=activity_leads, back_populates="activities")
     progress_updates = relationship("ProgressUpdate", back_populates="activity")
     stakeholders = relationship("Stakeholder", secondary=activity_stakeholders, back_populates="activities")
+    activity_type = relationship("ActivityType")

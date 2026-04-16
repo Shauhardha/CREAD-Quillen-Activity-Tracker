@@ -12,6 +12,7 @@ from app.models.miscellaneous import (
     EducationLevel,
     CulturalWealthTag,
     Location,
+    ActivityType,
 )
 
 from app.schemas.miscellaneous import (
@@ -20,6 +21,7 @@ from app.schemas.miscellaneous import (
     EducationLevelCreate, EducationLevelOut,
     CulturalWealthTagCreate, CulturalWealthTagOut,
     LocationCreate, LocationOut,
+    ActivityTypeCreate, ActivityTypeOut,
 )
 
 router = APIRouter(prefix="/api/misc", tags=["Miscellaneous"])
@@ -103,6 +105,8 @@ def update_funding_type(payload: FundingSourceCreate, id: int, db: Session = Dep
 
     item.source_name = payload.source_name
     item.description = payload.description
+    item.source_type = payload.source_type
+    item.funding_amount = payload.funding_amount
     db.commit()
     db.refresh(item)
     return item
@@ -215,3 +219,46 @@ def delete_location(id: int, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"message": "Deleted"}
+
+
+# --------------------------------------------------
+# Activity Types
+# --------------------------------------------------
+@router.post("/activity-types", response_model=ActivityTypeOut, dependencies=[Depends(require_admin)])
+def add_activity_type(payload: ActivityTypeCreate, db: Session = Depends(get_db)):
+    item = ActivityType(**payload.dict())
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+@router.get("/activity-types", response_model=List[ActivityTypeOut])
+def get_activity_types(db: Session = Depends(get_db)):
+    # return db.query(ActivityType).all()
+    try:
+        activityType = db.query(ActivityType).filter(ActivityType.deleted_at == None).all()
+        return activityType
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/activity-types/{id}", dependencies=[Depends(require_admin)])
+def delete_activity_type(id: int, db: Session = Depends(get_db)):
+    item = db.query(ActivityType).get(id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    # db.delete(item)
+    item.deleted_at = datetime.utcnow()
+    db.commit()
+    return {"message": "Deleted"}
+
+@router.put("/activity-types/{id}", response_model=ActivityTypeOut, dependencies=[Depends(require_admin)])
+def update_activity_type(payload: ActivityTypeCreate, id: int, db: Session = Depends(get_db)):
+    item = db.query(ActivityType).filter(ActivityType.id == id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Activity-type not found")
+
+    item.activityType_name = payload.activityType_name
+    item.description = payload.description
+    db.commit()
+    db.refresh(item)
+    return item

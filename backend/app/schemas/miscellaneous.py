@@ -25,6 +25,8 @@ class PartnershipTypeOut(PartnershipTypeBase):
 class FundingSourceBase(BaseModel):
     source_name: str
     description: Optional[str] = None
+    source_type: Optional[str] = None
+    funding_amount: Optional[float] = None
 
 class FundingSourceCreate(FundingSourceBase):
     pass
@@ -85,6 +87,23 @@ class LocationCreate(LocationBase):
     pass
 
 class LocationOut(LocationBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+# --------------------
+# Activity Type
+# --------------------
+class ActivityTypeBase(BaseModel):
+    activityType_name: str
+    description: Optional[str] = None
+
+class ActivityTypeCreate(ActivityTypeBase):
+    pass
+
+class ActivityTypeOut(ActivityTypeBase):
     id: int
 
     class Config:

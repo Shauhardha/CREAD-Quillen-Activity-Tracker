@@ -13,12 +13,6 @@ from app.auth import require_admin
 
 load_dotenv()
 
-print("🔍 ENV CHECK")
-print("COGNITO_REGION:", os.getenv("COGNITO_REGION"))
-print("COGNITO_USER_POOL_ID:", os.getenv("COGNITO_USER_POOL_ID"))
-print("AWS_ACCESS_KEY_ID exists:", bool(os.getenv("AWS_ACCESS_KEY_ID")))
-print("AWS_SECRET_ACCESS_KEY exists:", bool(os.getenv("AWS_SECRET_ACCESS_KEY")))
-
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 cognito = boto3_client('cognito-idp', region_name=os.getenv("COGNITO_REGION"))
