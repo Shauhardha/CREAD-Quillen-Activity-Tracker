@@ -4,38 +4,44 @@ import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaSave, FaEdit, FaTimesCircle } from "react-icons/fa";
 
 
-export default function PartnershipTypes({ accessToken }) {
-	const [items, setItems] = useState([]);
-	const [loading, setLoading] = useState(false);
-	const [form, setForm] = useState({ id: null, type_name: "", description: "" });
-	const [editing, setEditing] = useState(false);
+export default function ActivityTypes({ accessToken }) {
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({ id: null, activityType_name: "", description: "" });
+    const [editing, setEditing] = useState(false);
     const [search, setSearch] = useState("");
 
-	useEffect(() => {
-		fetchList();
-	}, []);
+    useEffect(() => {
+        fetchList();
+    }, []);
 
-	async function fetchList() {
-		setLoading(true);
-		try {
-			const res = await fetch(`${API_BASE}/misc/partnership-types`, {
-				headers: accessToken
-					? { Authorization: `Bearer ${accessToken}` }
-					: undefined,
-			});
+    async function fetchList() {
+        setLoading(true);
+        try {
+            const { tokens } = await fetchAuthSession();
+            if (!tokens?.idToken) throw new Error("Not authenticated");
 
-			if (!res.ok) throw new Error("no-api");
+            const headers = {
+                Authorization: `Bearer ${tokens.idToken.toString()}`,
+                "Content-Type": "application/json"
+            }; 
+            
+            const res = await fetch(`${API_BASE}/misc/activity-types`, {
+                headers,
+            });
 
-			const data = await res.json();
-			// Show only active (deleted_at === null)
-			setItems(Array.isArray(data) ? data.filter((d) => !d.deleted_at) : []);
-		} catch (err) {
-			console.warn("Failed to load partnership types from API, using empty list", err);
-			setItems([]);
-		} finally {
-			setLoading(false);
-		}
-	}
+            if (!res.ok) throw new Error("no-api");
+
+            const data = await res.json();
+            // Show only active (deleted_at === null)
+            setItems(Array.isArray(data) ? data.filter((d) => !d.deleted_at) : []);
+        } catch (err) {
+            console.warn("Failed to load partnership types from API, using empty list", err);
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const filteredItems = useMemo(() => {
         if (!search.trim()) return items;
@@ -44,22 +50,22 @@ export default function PartnershipTypes({ accessToken }) {
 
         return items.filter((item) => {
             return (
-            item.type_name?.toLowerCase().includes(q) ||
+            item.activityType_name?.toLowerCase().includes(q) ||
             item.description?.toLowerCase().includes(q) 
             );
         });
     }, [items, search]);
 
-	function resetForm() {
-		setForm({ id: null, type_name: "", description: "" });
-		setEditing(false);
-	}
+    function resetForm() {
+        setForm({ id: null, activityType_name: "", description: "" });
+        setEditing(false);
+    }
 
-	async function handleSubmit(e) {
-		e.preventDefault();
-		const payload = { type_name: form.type_name, description: form.description };
+    async function handleSubmit(e) {
+        e.preventDefault();
+        const payload = { activityType_name: form.activityType_name, description: form.description };
 
-		try {
+        try {
             const { tokens } = await fetchAuthSession();
             if (!tokens?.idToken) throw new Error("Not authenticated");
 
@@ -68,54 +74,54 @@ export default function PartnershipTypes({ accessToken }) {
                 "Content-Type": "application/json"
             }; 
 
-			if (editing && form.id) {
-				// update
-				const res = await fetch(`${API_BASE}/misc/partnership-types/${form.id}`, {
-					method: "PUT",
-					headers,
-					body: JSON.stringify(payload),
-				});
+            if (editing && form.id) {
+                // update
+                const res = await fetch(`${API_BASE}/misc/activity-types/${form.id}`, {
+                    method: "PUT",
+                    headers,
+                    body: JSON.stringify(payload),
+                });
 
-				if (!res.ok) throw new Error("update-failed");
-				const updated = await res.json();
-				setItems((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-			} else {
-				// create
-				const res = await fetch(`${API_BASE}/misc/partnership-types`, {
-					method: "POST",
-					headers,
-					body: JSON.stringify(payload),
-				});
+                if (!res.ok) throw new Error("update-failed");
+                const updated = await res.json();
+                setItems((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+            } else {
+                // create
+                const res = await fetch(`${API_BASE}/misc/activity-types`, {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify(payload),
+                });
 
-				if (!res.ok) throw new Error("create-failed");
-				const created = await res.json();
-				// only show if not soft-deleted
-				if (!created.deleted_at) setItems((prev) => [created, ...prev]);
-			}
+                if (!res.ok) throw new Error("create-failed");
+                const created = await res.json();
+                // only show if not soft-deleted
+                if (!created.deleted_at) setItems((prev) => [created, ...prev]);
+            }
 
-			resetForm();
-		} catch (err) {
-			console.warn("API unavailable or request failed; updating local state only", err);
-			// Fallback: optimistic local update
-			if (editing && form.id) {
-				setItems((prev) => prev.map((p) => (p.id === form.id ? { ...p, ...payload } : p)));
-			} else {
-				const fake = { id: Date.now(), ...payload, deleted_at: null };
-				setItems((prev) => [fake, ...prev]);
-			}
-			resetForm();
-		}
-	}
+            resetForm();
+        } catch (err) {
+            console.warn("API unavailable or request failed; updating local state only", err);
+            // Fallback: optimistic local update
+            if (editing && form.id) {
+                setItems((prev) => prev.map((p) => (p.id === form.id ? { ...p, ...payload } : p)));
+            } else {
+                const fake = { id: Date.now(), ...payload, deleted_at: null };
+                setItems((prev) => [fake, ...prev]);
+            }
+            resetForm();
+        }
+    }
 
-	function handleEdit(item) {
-		setForm({ id: item.id, type_name: item.type_name || "", description: item.description || "" });
-		setEditing(true);
-		window.scrollTo({ top: 0, behavior: "smooth" });
-	}
+    function handleEdit(item) {
+        setForm({ id: item.id, activityType_name: item.activityType_name || "", description: item.description || "" });
+        setEditing(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
 
-	async function handleDelete(item) {
+    async function handleDelete(item) {
         const confirmed = window.confirm(
-        `Delete partnership type "${item.type_name}"? This cannot be undone.`
+        `Delete activity type "${item.activityType_name}"? This cannot be undone.`
         );
         if (!confirmed) return;
 
@@ -128,7 +134,7 @@ export default function PartnershipTypes({ accessToken }) {
                 "Content-Type": "application/json"
             };    
             const res = await fetch(
-            `${API_BASE}/misc/partnership-types/${item.id}`,
+            `${API_BASE}/misc/activity-types/${item.id}`,
             {
             method: "DELETE",
             headers,
@@ -144,20 +150,20 @@ export default function PartnershipTypes({ accessToken }) {
         }
     }
 
-	return (
-		<div className="max-w-xl md:max-w-4xl mx-auto">
-			<h2 className="text-2xl font-bold mb-8">Partnership Types</h2>
+    return (
+        <div className="max-w-xl md:max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold mb-8">Activity Types</h2>
             <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
                 <h3 className="text-lg font-semibold mb-4">
-                {editing ? "Update" : "Add"} Partnership Type
+                {editing ? "Update" : "Add"} Activity Type
                 </h3>
                 <form onSubmit={handleSubmit} className="mb-6 text-sm">
                     <div className="mb-3">
                         <label className="block text-sm font-medium text-gray-700">Type name</label>
                         <input
-                            value={form.type_name}
-                            onChange={(e) => setForm((f) => ({ ...f, type_name: e.target.value }))}
-                            placeholder="Partnership name"
+                            value={form.activityType_name}
+                            onChange={(e) => setForm((f) => ({ ...f, activityType_name: e.target.value }))}
+                            placeholder="Activity name"
                             required
                             className="mt-1 block w-full rounded-md border shadow-sm p-2"
                         />
@@ -186,11 +192,11 @@ export default function PartnershipTypes({ accessToken }) {
                 </form>
 
                 <div>
-                    <h3 className="font-medium mb-2">Active Partnership Types</h3>
+                    <h3 className="font-medium mb-2">Activity Types</h3>
                     {loading ? (
                         <div>Loading...</div>
                     ) : items.length === 0 ? (
-                        <div className="text-sm text-gray-500">No partnership types found.</div>
+                        <div className="text-sm text-gray-500">No activity types found.</div>
                     ) : (
                         <div>
                             <section className="border-single border-b-2 py-3 mb-4 border-gray-400">
@@ -214,7 +220,7 @@ export default function PartnershipTypes({ accessToken }) {
                                     <tbody className="bg-white divide-y divide-gray-100 text-[11px] md:text-sm">
                                         {filteredItems.map((it) => (
                                             <tr key={it.id}>
-                                                <td className="px-4 py-2 align-top">{it.type_name}</td>
+                                                <td className="px-4 py-2 align-top">{it.activityType_name}</td>
                                                     <td className="px-4 py-2 align-top break-words whitespace-normal max-w-[40ch]">{it.description}</td>
                                                 <td className="px-4 py-2 align-top">
                                                     <div className="flex justify-end gap-1">
@@ -241,6 +247,6 @@ export default function PartnershipTypes({ accessToken }) {
                     )}
                 </div>
             </div>    
-		</div>
-	);
+        </div>
+    );
 }

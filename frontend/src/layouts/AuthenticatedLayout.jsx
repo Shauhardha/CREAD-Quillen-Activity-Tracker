@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import Sidebar from "../components/Sidebar";
+import UserProfile from "../components/UserProfile";
 import bgPassword from "../assets/auth-bg-2.jpg";
 
 export default function AuthenticatedLayout({ onSignOut }) {
@@ -32,6 +33,7 @@ export default function AuthenticatedLayout({ onSignOut }) {
       }}
     >
       <Sidebar isAdmin={isAdmin} onSignOut={onSignOut} />
+      <UserProfile groups={groups} />
 
       <main className="flex-1 p-6 flex justify-center mt-10">
         <div className="w-full max-w-4xl">

@@ -21,6 +21,14 @@ export default function ActivityManager() {
     funding_source_id: "",
     location_id: "",
     notes: "",
+    activity_type_id: "",
+    primary_audience: "",
+    funding_amount: "",
+    deliverables: "",
+    intended_outcomes: "",
+    evidence: "",
+    sustainability_plan: "",
+
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -51,6 +59,9 @@ export default function ActivityManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+
+  /* Activity types */
+  const [activitiesTypes, setActivitiesTypes] = useState([]);
 
   /* Fetch users */
   const fetchUsers = async () => {
@@ -84,6 +95,7 @@ export default function ActivityManager() {
     fetch(`${API_BASE}/misc/partnership-types`, { headers }).then(r => r.json()).then(setPartnershipTypes);
     fetch(`${API_BASE}/misc/funding-sources`, { headers }).then(r => r.json()).then(setFundingSources);
     fetch(`${API_BASE}/locations/states`, { headers }).then(r => r.json()).then(setStates);
+    fetch(`${API_BASE}/misc/activity-types`, { headers }).then(r => r.json()).then(setActivitiesTypes);
 
     fetchActivities();
   }, [accessToken]);
@@ -241,8 +253,16 @@ export default function ActivityManager() {
       partnership_type_id: form.partnership_type_id ? Number(form.partnership_type_id) : null,
       funding_source_id: form.funding_source_id ? Number(form.funding_source_id) : null,
       location_id: form.location_id ? Number(form.location_id) : null,
+      
+      activity_type_id: form.activity_type_id ? Number(form.activity_type_id) : null,
+      primary_audience: form.primary_audience || null,
+      funding_amount: form.funding_amount ? parseFloat(form.funding_amount) : null,
+      deliverables: form.deliverables || null,
+      intended_outcomes: form.intended_outcomes || null,
+      evidence: form.evidence || null,
+      sustainability_plan: form.sustainability_plan || null,
     };
-    // console.log("Payload being sent:", payload);
+     console.log("Payload being sent:", payload);
 
     const method = editingId ? "PUT" : "POST";
     const url = editingId ? `${API_BASE}/activities/${editingId}` : `${API_BASE}/activities/`;
@@ -313,6 +333,15 @@ export default function ActivityManager() {
       funding_source_id: fullActivity.funding_source_id || "",
       location_id: fullActivity.location_id || "",
       notes: fullActivity.notes || "",
+
+      activity_type_id: fullActivity.activity_type_id || "",
+      primary_audience: fullActivity.primary_audience || "",
+      funding_amount: fullActivity.funding_amount || "",
+      deliverables: fullActivity.deliverables || "",
+      intended_outcomes: fullActivity.intended_outcomes || "",
+      evidence: fullActivity.evidence || "",
+      sustainability_plan: fullActivity.sustainability_plan || "",
+
     });
 
     // Populate location cascade
@@ -361,6 +390,13 @@ export default function ActivityManager() {
       funding_source_id: "",
       location_id: "",
       notes: "",
+      activity_type_id: "",
+      primary_audience: "",
+      funding_amount: "",
+      deliverables: "",
+      intended_outcomes: "",
+      evidence: "",
+      sustainability_plan: "",
     });
     setState("");
     setCounty("");
@@ -381,12 +417,18 @@ export default function ActivityManager() {
 
         {/* Title & Description */}
         <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="w-full border p-2 rounded" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full border p-2 rounded h-22" />
+        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description (What is the activity?)" className="w-full border p-2 rounded h-22" />
 
         {/* Initiative */}
         <select name="initiative_id" value={form.initiative_id} onChange={handleChange} required className="w-full border p-2 rounded">
           <option value="">Select Initiative</option>
           {initiatives.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+        </select>
+
+        {/* Activity Type */}
+        <select name="activity_type_id" value={form.activity_type_id} onChange={handleChange} required className="w-full border p-2 rounded">
+          <option value="">Select Activity Type</option>
+          {activitiesTypes.map(at => <option key={at.id} value={at.id}>{at.activityType_name}</option>)}
         </select>
 
         {/* Lead Staff Dropdown */}
@@ -425,6 +467,9 @@ export default function ActivityManager() {
           <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required className="border p-2 rounded" />
         </div>
 
+        {/* Primary Audience */}    
+        <input name="primary_audience" value={form.primary_audience} onChange={handleChange} placeholder="Primary Audience" required className="w-full border p-2 rounded" />
+
         {/* Location Cascade */}
         <select value={state} onChange={e => setState(e.target.value)} required className="w-full border p-2 rounded">
           <option value="">Select State</option>
@@ -457,7 +502,15 @@ export default function ActivityManager() {
           {fundingSources.map(f => <option key={f.id} value={f.id}>{f.source_name}</option>)}
         </select>
 
-        <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes" className="w-full border p-2 rounded h-24" />
+        {/* Funding Amount */}    
+        <input type="number" name="funding_amount" value={form.funding_amount} onChange={handleChange} placeholder="Funding Amount (Optional)" className="w-full border p-2 rounded" />
+
+        <textarea name="deliverables" value={form.deliverables} onChange={handleChange} placeholder="Deliverables / Outputs" className="w-full border p-2 rounded h-24" />
+        <textarea name="intended_outcomes" value={form.intended_outcomes} onChange={handleChange} placeholder="Intended Outcomes (short-term)" className="w-full border p-2 rounded h-24" />
+        <textarea name="evidence" value={form.evidence} onChange={handleChange} placeholder="Evidence / Data Sources (How will we verify?)" className="w-full border p-2 rounded h-24" />
+        <textarea name="sustainability_plan" value={form.sustainability_plan} onChange={handleChange} placeholder="Sustainability Plan (How to maintain activity beyond funding?)" className="w-full border p-2 rounded h-24" />
+
+        <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes / Risk / Barriers" className="w-full border p-2 rounded h-24" />
 
         <div className="flex gap-4">
           <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">

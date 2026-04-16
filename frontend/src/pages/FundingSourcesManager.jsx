@@ -9,6 +9,8 @@ export default function FundingSourcesManager() {
   const [sources, setSources] = useState([]);
   const [sourceName, setSourceName] = useState("");
   const [description, setDescription] = useState("");
+  const [fundingAmount, setFundingAmount] = useState("");
+  const [sourceType, setSourceType] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -62,7 +64,9 @@ export default function FundingSourcesManager() {
       return sources.filter((item) => {
           return (
           item.source_name?.toLowerCase().includes(q) ||
-          item.description?.toLowerCase().includes(q)
+          item.description?.toLowerCase().includes(q) ||
+          item.source_type?.toLowerCase().includes(q) ||
+          item.funding_amount?.toLowerCase().includes(q)
           );
       });
   }, [sources, search]);
@@ -76,6 +80,8 @@ export default function FundingSourcesManager() {
     const payload = {
       source_name: sourceName,
       description,
+      source_type: sourceType,
+      funding_amount: fundingAmount,
     };
 
     try {
@@ -98,6 +104,8 @@ export default function FundingSourcesManager() {
 
       setSourceName("");
       setDescription("");
+      setFundingAmount("");
+      setSourceType("");
       setEditingId(null);
       await fetchFundingSources();
     } catch (err) {
@@ -136,12 +144,16 @@ export default function FundingSourcesManager() {
   const startEdit = (item) => {
     setSourceName(item.source_name);
     setDescription(item.description || "");
+    setSourceType(item.source_type || "");
+    setFundingAmount(item.funding_amount || "");
     setEditingId(item.id);
   };
 
   const cancelEdit = () => {
     setSourceName("");
     setDescription("");
+    setSourceType("");
+    setFundingAmount("");
     setEditingId(null);
     setError(null);
   };
@@ -168,10 +180,41 @@ export default function FundingSourcesManager() {
             className="w-full border rounded px-3 py-2"
           />
 
+          <div>
+            {/* <label className="block text-sm text-black font-medium mb-1">Source Type</label> */}
+            <select
+              name="sourceType"
+              value={sourceType}
+              placeholder="Source Type"
+              
+              onChange={(e) => setSourceType(e.target.value)}
+              className="w-full px-3 py-1.5 border bg-gray-50 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              <option value="">
+                Select Source Type
+              </option>
+              <option value="federal">Federal</option>
+              <option value="state">State</option>
+              <option value="foundation">Foundation</option>
+              <option value="university">University</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
           <textarea
             placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={loading}
+            className="w-full border rounded px-3 py-2"
+          />
+
+          <input
+            type="number"
+            required
+            placeholder="Funding amount (Optional)"
+            value={fundingAmount}
+            onChange={(e) => setFundingAmount(e.target.value)}
             disabled={loading}
             className="w-full border rounded px-3 py-2"
           />
@@ -225,6 +268,12 @@ export default function FundingSourcesManager() {
                   <p className="font-medium">{item.source_name}</p>
                   {item.description && (
                     <p className="text-xs text-gray-600">{item.description}</p>
+                  )}
+                  {item.funding_amount && (
+                    <p className="text-xs text-gray-600">Amount: {item.funding_amount}</p>
+                  )}
+                  {item.source_type && (
+                    <p className="text-xs text-gray-600">Type: {item.source_type}</p>
                   )}
                 </div>
 

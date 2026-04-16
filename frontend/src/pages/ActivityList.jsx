@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
-import { FaEye, FaClipboardCheck } from "react-icons/fa";
+import { FaEye, FaClipboardCheck, FaFileExcel } from "react-icons/fa";
+import * as XLSX from "xlsx";
 
 export default function ActivityList({ accessToken }) {
   const navigate = useNavigate();
@@ -11,9 +12,13 @@ export default function ActivityList({ accessToken }) {
   );
 
   const [activities, setActivities] = useState([]);
+  const [activityTypes, setActivityTypes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
 
 
   // Add this helper function inside the component (or outside if you prefer)
@@ -34,12 +39,17 @@ export default function ActivityList({ accessToken }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/activities/`, { headers })
-      .then(r => {
+    Promise.all([
+      fetch(`${API_BASE}/activities/`, { headers }).then(r => {
         if (!r.ok) throw new Error("Failed to fetch activities");
         return r.json();
+      }),
+      fetch(`${API_BASE}/misc/activity-types`, { headers }).then(r => r.json()),
+    ])
+      .then(([acts, types]) => {
+        setActivities(acts);
+        setActivityTypes(types);
       })
-      .then(setActivities)
       .catch(err => {
         console.error(err);
         setError("Unable to load activities");
@@ -48,12 +58,9 @@ export default function ActivityList({ accessToken }) {
   }, [headers]);
 
   const filteredActivities = useMemo(() => {
-    if (!search.trim()) return activities;
-
-    const q = search.toLowerCase();
-
+    const q = search.trim().toLowerCase();
     return activities.filter((act) => {
-        return (
+      const matchesSearch = !q || (
         act.title?.toLowerCase().includes(q) ||
         act.description?.toLowerCase().includes(q) ||
         act.status?.toLowerCase().includes(q) ||
@@ -62,10 +69,80 @@ export default function ActivityList({ accessToken }) {
         act.location?.state?.toLowerCase().includes(q) ||
         act.start_date?.toLowerCase().includes(q) ||
         act.end_date?.toLowerCase().includes(q)
-        );
+      );
+      const matchesStatus = !filterStatus || act.status === filterStatus;
+      const matchesType = !filterType || act.activity_type_id === Number(filterType);
+      return matchesSearch && matchesStatus && matchesType;
     });
-  }, [activities, search]);
+  }, [activities, search, filterStatus, filterType]);
 
+  const handleExport = async () => {
+    setExporting(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/activities/export`, { headers });
+      if (!res.ok) throw new Error("Export failed");
+      const allData = await res.json();
+
+      // Respect current filters by matching IDs already visible in the table
+      const filteredIds = new Set(filteredActivities.map(a => a.id));
+      const rows = allData.filter(row => filteredIds.has(row.id));
+
+      const wsData = [
+        [
+          "Title", "Activity Type", "Status", "Initiative",
+          "Start Date", "End Date", "City", "County", "State",
+          "Primary Audience", "Education Level", "Partnership Type",
+          "Funding Source", "Funding Source Type", "Funding Amount ($)",
+          "Lead Staff", "Description", "Deliverables", "Intended Outcomes",
+          "Evidence / Data Sources", "Sustainability Plan", "Notes",
+        ],
+        ...rows.map(r => [
+          r.title,
+          r.activity_type,
+          r.status,
+          r.initiative,
+          r.start_date,
+          r.end_date,
+          r.city,
+          r.county,
+          r.state,
+          r.primary_audience,
+          r.education_level,
+          r.partnership_type,
+          r.funding_source,
+          r.funding_source_type,
+          r.funding_amount ?? "",
+          r.lead_staff ?? "",
+          r.description,
+          r.deliverables,
+          r.intended_outcomes,
+          r.evidence,
+          r.sustainability_plan,
+          r.notes,
+        ]),
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Auto-width columns based on content
+      const colWidths = wsData[0].map((_, colIdx) =>
+        Math.min(60, Math.max(12, ...wsData.map(row => String(row[colIdx] ?? "").length)))
+      );
+      ws["!cols"] = colWidths.map(w => ({ wch: w }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Activities");
+
+      const filename = `CREAD_Activities_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, filename);
+    } catch (err) {
+      console.error(err);
+      setError("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -74,13 +151,43 @@ export default function ActivityList({ accessToken }) {
       {error && <p className="text-red-600">{error}</p>}
       {loading && <p className="text-gray-600">Loading...</p>}
 
-      <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title, location, status, date…"
-            className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      <div className="flex flex-col md:flex-row gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by title, location, date…"
+          className="flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="">All Statuses</option>
+          <option value="planned">Pending</option>
+          <option value="in_progress">Active</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="">All Activity Types</option>
+          {activityTypes.map(t => (
+            <option key={t.id} value={t.id}>{t.activityType_name}</option>
+          ))}
+        </select>
+        <button
+          onClick={handleExport}
+          disabled={exporting || filteredActivities.length === 0}
+          className="flex items-center justify-center gap-2 bg-green-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
+        >
+          <FaFileExcel size={14} />
+          {exporting ? "Exporting…" : `Export (${filteredActivities.length})`}
+        </button>
+      </div>
 
       {/* Desktop Table View - hidden on mobile */}
       <div className="hidden md:block bg-white rounded-xl shadow overflow-x-auto">

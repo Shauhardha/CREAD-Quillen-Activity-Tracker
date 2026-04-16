@@ -18,11 +18,14 @@ import ActivityDetails from "./pages/ActivityDetails";
 import ActivityList from "./pages/ActivityList";
 import StakeholdersManager from "./pages/StakeholdersManager";
 import Dashboard from "./pages/Dashboard.jsx";
+import ActivityTypes from "./pages/ActivityTypes";
+import ActivityCalendar from "./pages/ActivityCalendar";
+import Visualizations from "./pages/Visualizations";
 
 /* ──────────────────────────────────────────────
    45-MINUTE INACTIVITY AUTO-LOGOUT
 ────────────────────────────────────────────── */
-const INACTIVITY_LIMIT = 45 * 60 * 1000; // 45 minutes
+const INACTIVITY_LIMIT = 120 * 60 * 1000; // 45 minutes
 let inactivityTimer = null;
 
 function startInactivityTimer(onLogout) {
@@ -126,6 +129,7 @@ export default function App() {
           <Route path="/admin/users" element={<AddUserForm />} />
           <Route path="/initiatives" element={<InitiativesManager />} />
           <Route path="/partnership-types" element={<PartnershipTypes />} />
+          <Route path="/activity-types" element={<ActivityTypes />} />
           <Route path="/stakeholders" element={<StakeholdersManager />} />
           <Route path="/funding-sources" element={<FundingSourcesManager />} />
           <Route path="/education-levels" element={<EducationLevelsManager />} />
@@ -138,6 +142,8 @@ export default function App() {
           <Route path="/association" element={<Association />} />
           <Route path="/activitylist" element={<ActivityList />} />
           <Route path="/activitydetails/:id" element={<ActivityDetails />} />
+          <Route path="/calendar" element={<ActivityCalendar />} />
+          <Route path="/visualizations" element={<Visualizations />} />
         </Route>
       </Routes>
     </BrowserRouter>

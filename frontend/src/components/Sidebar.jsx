@@ -56,7 +56,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Activity Tracker</h2>
               <button
                 aria-label="Close menu"
@@ -69,7 +69,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               </button>
             </div>
 
-            <nav className="space-y-1 md:space-y-2 flex-1 text-sm">
+            <nav className="space-y-1 md:space-y-1 flex-1 text-[12px]">
               <NavLink to="/home" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Home
               </NavLink>
@@ -88,6 +88,10 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
 
               <NavLink to="/partnership-types" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Partnership Types
+              </NavLink>
+
+              <NavLink to="/activity-types" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Activity Types
               </NavLink>
 
               <NavLink to="/stakeholders" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
@@ -121,9 +125,17 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
               <NavLink to="/activitylist" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
                 Activities List
               </NavLink>
+
+              <NavLink to="/calendar" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Calendar
+              </NavLink>
+
+              <NavLink to="/visualizations" className={({ isActive }) => `${baseBtn} ${isActive ? active : ""}`}>
+                Visualizations
+              </NavLink>
             </nav>
 
-            <button onClick={onSignOut} className="mt-10 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+            <button onClick={onSignOut} className="mt-10 bg-indigo-600 text-white text-sm px-4 py-2 rounded hover:bg-indigo-700">
               Sign Out
             </button>
           </aside>
