@@ -122,7 +122,7 @@ export default function ActivityList({ accessToken }) {
         .leaflet-container img { max-width: none !important; max-height: none !important; }
       `}</style>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto overflow-x-hidden mt-6">
         <h1 className="text-2xl font-bold">CREAD-Quillen Activity Dashboard</h1>
         <h2 className="text-[15px] mb-6">Track and manage rural health initiatives</h2>
 
@@ -130,7 +130,7 @@ export default function ActivityList({ accessToken }) {
         {loading && <p className="text-gray-600">Loading...</p>}
 
         {/* ── KPI Cards ────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
 
           <div className="bg-white rounded-xl shadow p-4">
             <div className="flex gap-3 mt-1">

@@ -150,7 +150,7 @@ export default function Visualizations() {
   if (loading) return <p className="p-6 text-gray-500">Loading visualizations…</p>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 overflow-x-hidden mt-6">
 
       {/* Page header */}
       <div>
@@ -162,7 +162,7 @@ export default function Visualizations() {
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <div className="grid md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 
         <div className="bg-white rounded-xl shadow p-4">
           <div className="flex gap-3 mt-1">
@@ -222,7 +222,7 @@ export default function Visualizations() {
                 <YAxis
                   dataKey="initiative_name"
                   type="category"
-                  width={135}
+                  width={80}
                   tick={{ fontSize: 11 }}
                   tickFormatter={formatInitiativeName}
                 />
@@ -478,7 +478,7 @@ export default function Visualizations() {
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 11 }}
                     tickFormatter={(v) => v >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v}`} />
-                  <YAxis dataKey="source" type="category" width={120} tick={{ fontSize: 11 }} />
+                  <YAxis dataKey="source" type="category" width={80} tick={{ fontSize: 11 }} />
                   <Tooltip
                     formatter={(v) => [`$${Number(v).toLocaleString()}`, "Total Funding"]}
                   />

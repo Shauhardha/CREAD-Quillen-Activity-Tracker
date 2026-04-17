@@ -145,7 +145,7 @@ export default function ActivityList({ accessToken }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 mt-6">
       <h1 className="text-2xl font-bold">Activities</h1>
 
       {error && <p className="text-red-600">{error}</p>}

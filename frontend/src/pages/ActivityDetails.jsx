@@ -310,7 +310,7 @@ export default function ActivityDetails({ accessToken }) {
   if (!activity) return <p className="p-6">Loading…</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-4">
+    <div className="max-w-5xl mx-auto p-0 sm:p-4 space-y-4">
 
       {/* ── Print / export CSS ──────────────────────────────────── */}
       <style>{`

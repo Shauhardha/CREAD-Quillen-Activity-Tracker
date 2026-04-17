@@ -247,7 +247,7 @@ export default function StakeholdersManager({ accessToken }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto mt-6">
       <h2 className="text-2xl font-bold mb-8">Stakeholder Management</h2>
       <div className=" rounded-xl shadow overflow-x-auto  space-y-8">  
         {/* Form */}

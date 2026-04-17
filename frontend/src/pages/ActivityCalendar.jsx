@@ -221,7 +221,7 @@ export default function ActivityCalendar() {
   const activityCount = fcEvents.filter((e) => !String(e.id).startsWith("ms-")).length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
+    <div className="max-w-7xl mx-auto space-y-4 overflow-x-hidden mt-2">
 
       {/* ── Dark calendar CSS overrides ───────────────────────────── */}
       <style>{`
@@ -481,7 +481,7 @@ export default function ActivityCalendar() {
           buttonText={{
             today: "Today",
             month: "Month",
-            list:  "List View",
+            list:  "List",
           }}
           events={fcEvents}
           eventClick={handleEventClick}

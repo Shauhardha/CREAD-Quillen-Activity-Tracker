@@ -408,7 +408,7 @@ export default function ActivityManager() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto mt-6">
       <h2 className="text-2xl font-bold">Activity Manager</h2>  
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-xl shadow space-y-6 text-sm">
@@ -462,9 +462,9 @@ export default function ActivityManager() {
         </select>
         <label className="text-gray-600 ml-2">{editingId ? "Please note that status will only be udpated in Activity Details page" : ""}</label>
 
-        <div className="grid grid-cols-2 gap-4">
-          <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required className="border p-2 rounded" />
-          <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required className="border p-2 rounded" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input type="date" name="start_date" value={form.start_date} onChange={handleChange} required className="w-full border p-2 rounded" />
+          <input type="date" name="end_date" value={form.end_date} onChange={handleChange} required className="w-full border p-2 rounded" />
         </div>
 
         {/* Primary Audience */}    

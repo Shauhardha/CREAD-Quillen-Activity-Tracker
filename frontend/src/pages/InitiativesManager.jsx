@@ -157,7 +157,7 @@ export default function InitiativesManager() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto rounded-xl ">
+    <div className="max-w-4xl mx-auto rounded-xl mt-6">
       <h2 className="text-2xl font-bold mb-8">Manage Initiatives</h2>
 
         <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">

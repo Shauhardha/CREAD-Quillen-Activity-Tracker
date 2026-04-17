@@ -227,7 +227,7 @@ function AddUserForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto rounded-lg">
+    <div className="max-w-4xl mx-auto rounded-lg mt-6">
       <h2 className="text-2xl font-bold mb-8 text-black">User Management</h2>
         <div className="rounded-xl shadow overflow-x-auto">
           <div className="bg-white p-4 rounded-lg shadow">      
@@ -327,7 +327,7 @@ function AddUserForm() {
             />
             </section>
 
-            <div className="h-[30vh] overflow-x-auto w-[44vh] md:w-full overflow-y-auto">
+            <div className="h-[30vh] overflow-x-auto w-full overflow-y-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-sm text-gray-600 border-b">

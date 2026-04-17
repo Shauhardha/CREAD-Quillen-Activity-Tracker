@@ -145,7 +145,7 @@ export default function PartnershipTypes({ accessToken }) {
     }
 
 	return (
-		<div className="max-w-xl md:max-w-4xl mx-auto">
+		<div className="max-w-xl md:max-w-4xl mx-auto mt-6">
 			<h2 className="text-2xl font-bold mb-8">Partnership Types</h2>
             <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
                 <h3 className="text-lg font-semibold mb-4">

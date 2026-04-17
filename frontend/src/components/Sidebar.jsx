@@ -54,7 +54,7 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
   const panelRef = useRef(null);
 
   const baseLink   = "block w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-200 text-[12px] transition";
-  const activeLink = "bg-blue-600 text-white hover:bg-blue-500 hover:text-white";
+  const activeLink = "bg-blue-600 text-white hover:bg-blue-600 hover:text-gray-300";
 
   /* ── Outside click + Escape ─────────────────────────────────────── */
   useEffect(() => {
@@ -123,7 +123,13 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
           >
             {/* ── Header ──────────────────────────────────────────── */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 shrink-0">
-              <h2 className="text-lg font-bold text-gray-800">Activity Tracker</h2>
+              <NavLink
+                to="/home"
+                onClick={() => setOpen(false)}
+                className="text-lg font-bold text-gray-800 hover:text-indigo-600 transition"
+              >
+                Activity Tracker
+              </NavLink>
               <button
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}
