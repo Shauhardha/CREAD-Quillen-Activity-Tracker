@@ -23,9 +23,9 @@ import ActivityCalendar from "./pages/ActivityCalendar";
 import Visualizations from "./pages/Visualizations";
 
 /* ──────────────────────────────────────────────
-   45-MINUTE INACTIVITY AUTO-LOGOUT
+   1-HOUR INACTIVITY AUTO-LOGOUT
 ────────────────────────────────────────────── */
-const INACTIVITY_LIMIT = 120 * 60 * 1000; // 45 minutes
+const INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hour
 let inactivityTimer = null;
 
 function startInactivityTimer(onLogout) {
@@ -33,7 +33,7 @@ function startInactivityTimer(onLogout) {
     if (inactivityTimer) clearTimeout(inactivityTimer);
 
     inactivityTimer = setTimeout(() => {
-      console.warn("Auto-logout: 45 minutes of inactivity");
+      console.warn("Auto-logout: 1 hour of inactivity");
       onLogout();
     }, INACTIVITY_LIMIT);
   };

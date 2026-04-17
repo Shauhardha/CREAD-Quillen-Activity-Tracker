@@ -13,6 +13,16 @@ import { GoPulse } from "react-icons/go";
 import { AiOutlineFundProjectionScreen } from "react-icons/ai";
 import { SlLocationPin } from "react-icons/sl";
 import { MdOutlinePendingActions } from "react-icons/md";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import iconUrl       from "leaflet/dist/images/marker-icon.png";
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import shadowUrl     from "leaflet/dist/images/marker-shadow.png";
+
+/* ── Leaflet default-icon fix ──────────────────────────────────── */
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl });
 
 /* ── Palette ───────────────────────────────────────────────────── */
 const COLORS = [
@@ -50,6 +60,12 @@ export default function Visualizations() {
   const [loading,            setLoading]            = useState(true);
   const [error,              setError]              = useState(null);
 
+  /* ── Map state ───────────────────────────────────────────────── */
+  const [activitiesMap,  setActivitiesMap]  = useState([]);
+  const [stakeholders,   setStakeholders]   = useState([]);
+  const [showActivities, setShowActivities] = useState(true);
+  const [mapLoading,     setMapLoading]     = useState(true);
+
   /* ── Fetch all chart data in parallel ───────────────────────── */
   useEffect(() => {
     Promise.all([
@@ -78,6 +94,17 @@ export default function Visualizations() {
       })
       .catch(() => setError("Unable to load visualization data."))
       .finally(() => setLoading(false));
+  }, []);
+
+  /* ── Fetch map data separately (doesn't block charts) ───────── */
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API_BASE}/dashboard/activities`  ).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/stakeholders`).then(r => r.json()).catch(() => []),
+    ]).then(([acts, stks]) => {
+      setActivitiesMap(Array.isArray(acts) ? acts : []);
+      setStakeholders(Array.isArray(stks) ? stks : []);
+    }).finally(() => setMapLoading(false));
   }, []);
 
   /* ── Derived data ────────────────────────────────────────────── */
@@ -625,15 +652,66 @@ export default function Visualizations() {
         </ChartCard>
       )}
 
-      {/* ══ Future: Geographic Choropleth note ═══════════════════ */}
-      {/* <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5 text-sm text-indigo-700">
-        <p className="font-semibold mb-1">📍 Geographic Choropleth — Coming Soon</p>
-        <p className="text-indigo-500 text-xs">
-          A county-level choropleth map showing activity density (darker = more activities)
-          requires a Tennessee GeoJSON boundary file. All other data is already available.
-          This can be added using your existing Leaflet setup once the GeoJSON layer is integrated.
-        </p>
-      </div> */}
+      {/* ══ Service Areas Map ════════════════════════════════════ */}
+      <style>{`
+        .leaflet-container { z-index: 10; }
+        .leaflet-top, .leaflet-bottom { z-index: 20 !important; }
+        .leaflet-container img { max-width: none !important; max-height: none !important; }
+      `}</style>
+
+      <div className="bg-white rounded-xl shadow p-6 space-y-4">
+        <div className="flex flex-wrap gap-3 items-start justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-gray-800">Service Areas Map</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Geographic distribution of {showActivities ? "activities" : "stakeholders"} across the region
+            </p>
+          </div>
+          <button
+            onClick={() => setShowActivities(p => !p)}
+            className="bg-blue-700 text-sm text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition shrink-0"
+          >
+            Show {showActivities ? "Stakeholders" : "Activities"}
+          </button>
+        </div>
+
+        {mapLoading ? (
+          <p className="text-sm text-gray-400 italic py-4 text-center">Loading map data…</p>
+        ) : (
+          <div className="rounded-xl overflow-hidden">
+            <MapContainer
+              center={[36.3134, -82.3535]}
+              zoom={8}
+              style={{ height: "500px", width: "100%" }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+              />
+              {(showActivities ? activitiesMap : stakeholders).map(item => {
+                const lat = item.latitude;
+                const lon = item.longitude;
+                if (!lat || !lon) return null;
+                return (
+                  <Marker key={item.id} position={[lat, lon]}>
+                    <Popup>
+                      <div className="space-y-1 text-sm">
+                        <p className="font-medium">{showActivities ? item.title : item.name}</p>
+                        {showActivities && item.description && (
+                          <p>{item.description.slice(0, 100)}…</p>
+                        )}
+                        <p className="text-gray-500">
+                          {item.city}, {item.county}, {item.state}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </MapContainer>
+          </div>
+        )}
+      </div>
 
     </div>
   );
