@@ -53,8 +53,8 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
   const [expandAll,   setExpandAll]   = useState(false);  // override: all open
   const panelRef = useRef(null);
 
-  const baseLink   = "block w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-200 text-[12px] transition";
-  const activeLink = "bg-blue-600 text-white hover:bg-blue-600 hover:text-gray-300";
+  const baseLink   = "block w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-300 text-[12px] transition";
+  const activeLink = "bg-blue-600 text-white hover:bg-blue-600 hover:text-gray-400";
 
   /* ── Outside click + Escape ─────────────────────────────────────── */
   useEffect(() => {
