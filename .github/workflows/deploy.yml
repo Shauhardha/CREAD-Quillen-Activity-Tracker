@@ -25,6 +25,9 @@ jobs:
           AWS_EXPORTS: ${{ secrets.AWS_EXPORTS }}
         run: echo "$AWS_EXPORTS" > frontend/src/aws-exports.js
 
+      - name: Create frontend .env
+        run: echo "VITE_API_BASE=${{ secrets.VITE_API_BASE }}" > frontend/.env
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm install --legacy-peer-deps
