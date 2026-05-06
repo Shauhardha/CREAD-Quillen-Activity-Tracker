@@ -165,8 +165,12 @@ function AddUserForm() {
   };
 
   const saveEdit = async (id) => {
+    // capture the original role before sending
+    const originalUser = users.find(u => u.id === id);
+    const roleChanged = originalUser && originalUser.role !== editForm.role;
+
     try {
-      
+
       const { tokens } = await fetchAuthSession();
       if (!tokens?.idToken) throw new Error("Not authenticated");
 
@@ -188,8 +192,20 @@ function AddUserForm() {
       }
 
       await fetchUsers();
-      try { window.alert(`User updated: ${editForm.name || id}`); } catch (e) {}
       cancelEdit();
+
+      if (roleChanged) {
+        try {
+          window.alert(
+            `✅ User updated.\n\n` +
+            `Role changed to "${editForm.role}".\n\n` +
+            `⚠️ The user must sign out and sign back in for the new permissions to take effect.`
+          );
+        } catch (e) {}
+      } else {
+        try { window.alert(`User updated: ${editForm.name || id}`); } catch (e) {}
+      }
+
     } catch (err) {
       console.error('saveEdit error', err);
       setMessage('Error updating user: ' + err.message);
@@ -357,7 +373,15 @@ function AddUserForm() {
                             <option value="read_only">Read Only</option>
                           </select>
                         ) : (
-                          u.role
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                            u.role === "admin"
+                              ? "bg-amber-100 text-amber-800"
+                              : u.role === "read_only"
+                              ? "bg-slate-100 text-slate-700"
+                              : "bg-indigo-100 text-indigo-700"
+                          }`}>
+                            {u.role === "read_only" ? "Read Only" : u.role === "admin" ? "Admin" : "Staff"}
+                          </span>
                         )}
                       </td>
                       <td className="py-2 px-3">

@@ -21,7 +21,8 @@ export default function AuthenticatedLayout({ onSignOut }) {
     loadSession();
   }, []);
 
-  const isAdmin = groups.includes("admin");
+  const isAdmin    = groups.includes("admin");
+  const isReadOnly = groups.includes("read_only");
 
   return (
     <div className=" mx-auto flex min-h-screen bg-gray-50"
@@ -32,13 +33,13 @@ export default function AuthenticatedLayout({ onSignOut }) {
         backgroundPosition: "center",
       }}
     >
-      <Sidebar isAdmin={isAdmin} onSignOut={onSignOut} />
+      <Sidebar isAdmin={isAdmin} isReadOnly={isReadOnly} onSignOut={onSignOut} />
       <UserProfile groups={groups} onSignOut={onSignOut} />
 
       <main className="flex-1 p-3 md:p-6 flex justify-center mt-10 overflow-x-hidden">
         <div className="w-full max-w-4xl">
-            <Outlet context={{ accessToken, groups, isAdmin }} />
-        </div>    
+            <Outlet context={{ accessToken, groups, isAdmin, isReadOnly }} />
+        </div>
       </main>
     </div>
   );

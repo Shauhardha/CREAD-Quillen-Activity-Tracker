@@ -48,8 +48,9 @@ export default function UserProfile({ groups = [], onSignOut }) {
     ? fullName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
     : email.slice(0, 2).toUpperCase();
 
-  const isAdmin = groups.includes("admin");
-  const role    = isAdmin ? "Admin" : "Staff";
+  const isAdmin    = groups.includes("admin");
+  const isReadOnly = groups.includes("read_only");
+  const role = isAdmin ? "Admin" : isReadOnly ? "Read Only" : "Staff";
 
   /* ── Password-change handler ─────────────────────────────────── */
   async function handlePasswordChange(e) {
@@ -122,6 +123,8 @@ export default function UserProfile({ groups = [], onSignOut }) {
                     inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs font-semibold
                     ${isAdmin
                       ? "bg-amber-400 text-amber-900"
+                      : isReadOnly
+                      ? "bg-slate-300 text-slate-800"
                       : "bg-white/20 text-white"}
                   `}
                 >
@@ -146,7 +149,9 @@ export default function UserProfile({ groups = [], onSignOut }) {
               <div className="flex items-center gap-2.5 text-xs">
                 <FaShieldAlt className="text-gray-300 shrink-0" size={11} />
                 <span className="text-gray-400 w-12 shrink-0">Role</span>
-                <span className="text-gray-700">{role}</span>
+                <span className={`font-semibold ${
+                  isAdmin ? "text-amber-600" : isReadOnly ? "text-slate-500" : "text-indigo-600"
+                }`}>{role}</span>
               </div>
               {attrs?.sub && (
                 <div className="flex items-center gap-2.5 text-xs">

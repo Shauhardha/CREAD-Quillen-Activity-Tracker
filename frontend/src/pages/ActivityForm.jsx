@@ -7,6 +7,7 @@ import { FaTrash, FaEdit, FaClipboardCheck } from "react-icons/fa";
 export default function ActivityManager() {
   const outlet = useOutletContext();
   const accessToken = outlet?.accessToken;
+  const isReadOnly  = outlet?.isReadOnly;
 
   const [form, setForm] = useState({
     title: "",
@@ -409,9 +410,17 @@ export default function ActivityManager() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto mt-6">
-      <h2 className="text-2xl font-bold">Activity Manager</h2>  
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-xl shadow space-y-6 text-sm">
+      <h2 className="text-2xl font-bold">Activity Manager</h2>
+
+      {/* View-only banner */}
+      {isReadOnly && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+          You have view-only access. Contact an admin to add or edit activities.
+        </div>
+      )}
+
+      {/* Add / Edit form — hidden for read-only */}
+      {!isReadOnly && <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-xl shadow space-y-6 text-sm">
         <h2 className="text-lg font-semibold">{editingId ? "Edit Activity" : "Create New Activity"}</h2> 
         {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
@@ -522,7 +531,7 @@ export default function ActivityManager() {
             </button>
           )}
         </div>
-      </form>
+      </form>}
 
       {/* Activities List */}
       <div className="bg-gray-50 p-6 rounded-xl shadow text-sm">
@@ -553,10 +562,12 @@ export default function ActivityManager() {
                     {act.location && <p className="text-sm">Location: {act.location.city}, {act.location.county}, {act.location.state}</p>}
                     </div>
                 </div>    
-                <div className="flex gap-3">
-                  <button onClick={() => startEdit(act)} className="text-blue-600 text-base"><FaEdit /></button>
-                  <button onClick={() => handleDelete(act.id)} className="text-red-600 text-base"><FaTrash /></button>
-                </div>
+                {!isReadOnly && (
+                  <div className="flex gap-3">
+                    <button onClick={() => startEdit(act)} className="text-blue-600 text-base"><FaEdit /></button>
+                    <button onClick={() => handleDelete(act.id)} className="text-red-600 text-base"><FaTrash /></button>
+                  </div>
+                )}
               </div>
             ))}
             </div>

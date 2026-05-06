@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaEdit } from "react-icons/fa";
 
 export default function StakeholdersManager({ accessToken }) {
+  const { isReadOnly } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [form, setForm] = useState({
@@ -249,9 +251,17 @@ export default function StakeholdersManager({ accessToken }) {
   return (
     <div className="max-w-7xl mx-auto mt-6">
       <h2 className="text-2xl font-bold mb-8">Stakeholder Management</h2>
-      <div className=" rounded-xl shadow overflow-x-auto  space-y-8">  
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-6 text-sm">
+      <div className=" rounded-xl shadow overflow-x-auto  space-y-8">
+
+        {/* View-only banner for non-admin users */}
+        {isReadOnly && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+            You have view-only access. Contact an admin to make changes.
+          </div>
+        )}
+
+        {/* Form — admin only */}
+        {!isReadOnly && <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-6 text-sm">
             <h2 className="text-lg font-semibold">{editingId ? "Edit Stakeholder" : "Add New Stakeholder"}</h2>
             {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
@@ -343,7 +353,7 @@ export default function StakeholdersManager({ accessToken }) {
                 </button>
             )}
             </div>
-        </form>
+        </form>}
 
         {/* Stakeholders List */}
         <div className="bg-white p-6 rounded-xl shadow space-y-4">
@@ -382,14 +392,16 @@ export default function StakeholdersManager({ accessToken }) {
                         </p>
                     )}
                     </div>
-                    <div className="flex gap-3">
-                    <button onClick={() => startEdit(st)} className="text-blue-600">
-                        <FaEdit />
-                    </button>
-                    <button onClick={() => handleDelete(st.id)} className="text-red-600">
-                        <FaTrash />
-                    </button>
-                    </div>
+                    {!isReadOnly && (
+                      <div className="flex gap-3">
+                      <button onClick={() => startEdit(st)} className="text-blue-600">
+                          <FaEdit />
+                      </button>
+                      <button onClick={() => handleDelete(st.id)} className="text-red-600">
+                          <FaTrash />
+                      </button>
+                      </div>
+                    )}
                 </div>
                 ))}
                 </div>

@@ -17,6 +17,7 @@ const GROUPS = [
   {
     key: "activities",
     label: "Activities +",
+    writersOnly: true,
     links: [
       { to: "/activity-types", label: "Activity Types" },
       { to: "/activities",     label: "Add Activities" },
@@ -26,6 +27,7 @@ const GROUPS = [
   {
     key: "reference",
     label: "Reference Data",
+    writersOnly: true,
     links: [
       { to: "/partnership-types",   label: "Partnership Types" },
       { to: "/stakeholders",        label: "Stakeholders" },
@@ -47,7 +49,7 @@ const GROUPS = [
 ];
 
 /* ── Component ────────────────────────────────────────────────────── */
-export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
+export default function Sidebar({ isAdmin, isReadOnly, onSignOut, initialOpen = false }) {
   const [open,        setOpen]        = useState(initialOpen);
   const [activeGroup, setActiveGroup] = useState(null);   // accordion: one open at a time
   const [expandAll,   setExpandAll]   = useState(false);  // override: all open
@@ -92,7 +94,10 @@ export default function Sidebar({ isAdmin, onSignOut, initialOpen = false }) {
     if (!checked) setActiveGroup(null);
   };
 
-  const visibleGroups = GROUPS.filter(g => !g.adminOnly || isAdmin);
+  const visibleGroups = GROUPS.filter(g =>
+    (!g.adminOnly  || isAdmin) &&
+    (!g.writersOnly || !isReadOnly)
+  );
 
   /* ── Render ─────────────────────────────────────────────────────── */
   return (

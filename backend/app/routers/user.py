@@ -59,11 +59,12 @@ def add_user(
         db.commit()
         db.refresh(new_user)
 
-        # Optional: Add to Cognito group
+        # Add to Cognito group — use .value to get plain string from enum
+        role_str = payload.role.value if hasattr(payload.role, 'value') else str(payload.role)
         cognito.admin_add_user_to_group(
             UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
             Username=payload.email,
-            GroupName=payload.role  # 'admin' or 'staff'
+            GroupName=role_str
         )
 
         return {"message": "User added", "sub": sub, "id": new_user.id}
@@ -105,50 +106,54 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
 
         # role -> update Cognito groups
         if payload.role is not None and payload.role != user.role:
-            old_role = user.role
-            new_role = payload.role
-            # Update DB
-            user.role = new_role
+            # Extract plain string values from enums (avoids "UserRole.read_only" bug)
+            old_role_str = user.role.value if hasattr(user.role, 'value') else str(user.role)
+            new_role_str = payload.role.value if hasattr(payload.role, 'value') else str(payload.role)
+            pool_id = os.getenv("COGNITO_USER_POOL_ID")
+
+            # Update DB first
+            user.role = payload.role
             updated = True
 
-            # Update Cognito group membership
-            try:
-                # remove from old group if present
-                if old_role:
+            # ── Remove from old Cognito group ───────────────────────
+            if old_role_str:
+                try:
                     cognito.admin_remove_user_from_group(
-                        UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
+                        UserPoolId=pool_id,
                         Username=user.email,
-                        GroupName=str(old_role)
+                        GroupName=old_role_str
                     )
-            except Exception:
-                pass
+                    print(f"✅ Removed {user.email} from Cognito group '{old_role_str}'")
+                except cognito.exceptions.ResourceNotFoundException:
+                    print(f"ℹ️  Cognito group '{old_role_str}' not found — skipping removal")
+                except Exception as e:
+                    print(f"⚠️  Could not remove {user.email} from Cognito group '{old_role_str}': {e}")
 
+            # ── Add user to new group (group already exists in Cognito) ──
             try:
                 cognito.admin_add_user_to_group(
-                    UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
+                    UserPoolId=pool_id,
                     Username=user.email,
-                    GroupName=str(new_role)
+                    GroupName=new_role_str
                 )
-            except Exception:
-                pass
+                print(f"✅ Added {user.email} to Cognito group '{new_role_str}'")
+            except Exception as e:
+                print(f"⚠️  Could not add {user.email} to Cognito group '{new_role_str}': {e}")
 
         # is_active -> enable/disable in Cognito
         if payload.is_active is not None and payload.is_active != user.is_active:
             user.is_active = payload.is_active
             updated = True
+            pool_id = os.getenv("COGNITO_USER_POOL_ID")
             try:
                 if payload.is_active:
-                    cognito.admin_enable_user(
-                        UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
-                        Username=user.email
-                    )
+                    cognito.admin_enable_user(UserPoolId=pool_id, Username=user.email)
+                    print(f"✅ Enabled Cognito user {user.email}")
                 else:
-                    cognito.admin_disable_user(
-                        UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
-                        Username=user.email
-                    )
-            except Exception:
-                pass
+                    cognito.admin_disable_user(UserPoolId=pool_id, Username=user.email)
+                    print(f"✅ Disabled Cognito user {user.email}")
+            except Exception as e:
+                print(f"⚠️  Could not update Cognito enabled status for {user.email}: {e}")
 
         if updated:
             db.commit()

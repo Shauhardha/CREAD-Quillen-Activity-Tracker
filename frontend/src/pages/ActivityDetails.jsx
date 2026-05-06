@@ -1,13 +1,170 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaCheck, FaTrash, FaPlus, FaFileExcel, FaPrint } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
+/* ── Milestone Gantt Component ─────────────────────────────────── */
+function MilestoneGantt({ activity, milestones, progressUpdates }) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const parseLocal = (str) => {
+    if (!str) return null;
+    const [y, m, d] = str.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const startDate = parseLocal(activity.start_date);
+  const endDate   = parseLocal(activity.end_date);
+
+  if (!startDate || !endDate) {
+    return (
+      <p className="text-sm text-gray-400 italic">
+        Activity must have both a start and end date to show the timeline.
+      </p>
+    );
+  }
+
+  const totalMs = endDate - startDate || 1;
+  const clamp   = (v) => Math.max(0, Math.min(100, v));
+
+  const getPct = (dateStr) => {
+    const d = parseLocal(dateStr);
+    if (!d) return null;
+    return clamp(((d - startDate) / totalMs) * 100);
+  };
+
+  const today       = parseLocal(todayStr);
+  const todayPct    = clamp(((today - startDate) / totalMs) * 100);
+  const showToday   = today >= startDate && today <= endDate;
+
+  const getStyle = (m) => {
+    if (m.is_achieved)                                      return { bg: "#22c55e", textCls: "text-green-700", label: "Achieved"  };
+    if (m.due_date && m.due_date < todayStr)                return { bg: "#ef4444", textCls: "text-red-700",   label: "Overdue"   };
+    return                                                         { bg: "#f59e0b", textCls: "text-amber-700", label: "Pending"   };
+  };
+
+  const withDates    = milestones.filter(m => m.due_date);
+  const withoutDates = milestones.filter(m => !m.due_date);
+
+  return (
+    <div className="space-y-6">
+
+      {/* ── Track ─────────────────────────────────────────────── */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-[11px] text-gray-400 select-none">
+          <span>{activity.start_date}</span>
+          <span>{activity.end_date}</span>
+        </div>
+
+        <div className="relative h-5 bg-gray-100 rounded-full">
+          {/* Progress fill (start → today) */}
+          {showToday && (
+            <div
+              className="absolute inset-y-0 left-0 bg-indigo-100 rounded-full"
+              style={{ width: `${todayPct}%` }}
+            />
+          )}
+
+          {/* Milestone dots */}
+          {withDates.map(m => {
+            const pct = getPct(m.due_date);
+            if (pct === null) return null;
+            const { bg } = getStyle(m);
+            const count  = progressUpdates.filter(p => p.milestone_id === m.id).length;
+            return (
+              <div
+                key={m.id}
+                title={`${m.title}\nDue: ${m.due_date}${count > 0 ? `\n${count} progress update${count !== 1 ? "s" : ""} linked` : ""}`}
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer z-10"
+                style={{ left: `${pct}%`, backgroundColor: bg }}
+              />
+            );
+          })}
+
+          {/* Today line */}
+          {showToday && (
+            <div
+              className="absolute top-0 h-full w-0.5 bg-indigo-500 z-20"
+              style={{ left: `${todayPct}%` }}
+            />
+          )}
+        </div>
+
+        {/* Today label */}
+        {showToday && (
+          <div className="relative h-4">
+            <span
+              className="absolute text-[10px] text-indigo-500 font-medium -translate-x-1/2"
+              style={{ left: `${todayPct}%` }}
+            >
+              Today
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Legend ────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        {withDates.map(m => {
+          const { bg, textCls, label } = getStyle(m);
+          const count = progressUpdates.filter(p => p.milestone_id === m.id).length;
+          return (
+            <div key={m.id} className="flex items-center gap-2 text-xs">
+              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: bg }} />
+              <span className={`font-medium ${textCls} truncate`}>{m.title}</span>
+              <span className="text-gray-300">·</span>
+              <span className="text-gray-500 whitespace-nowrap">Due {m.due_date}</span>
+              {m.is_achieved && m.achieved_date && (
+                <>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-green-600 whitespace-nowrap">Achieved {m.achieved_date}</span>
+                </>
+              )}
+              {count > 0 && (
+                <span className="ml-auto shrink-0 bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap">
+                  {count} update{count !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          );
+        })}
+        {withoutDates.map(m => {
+          const count = progressUpdates.filter(p => p.milestone_id === m.id).length;
+          return (
+            <div key={m.id} className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="w-3 h-3 rounded-full bg-gray-300 shrink-0" />
+              <span className="truncate">{m.title}</span>
+              <span className="text-gray-300">·</span>
+              <span className="italic">No due date — not shown on timeline</span>
+              {count > 0 && (
+                <span className="ml-auto shrink-0 bg-indigo-50 text-indigo-600 border border-indigo-100 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap">
+                  {count} update{count !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Colour key ────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-3 text-[11px] text-gray-500 border-t pt-3">
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />Pending</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500  inline-block" />Overdue</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />Achieved</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-300 inline-block" />Elapsed period</span>
+        <span className="flex items-center gap-1.5"><span className="w-0.5 h-3 bg-indigo-500 inline-block" />Today</span>
+      </div>
+
+    </div>
+  );
+}
+
 export default function ActivityDetails({ accessToken }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isReadOnly } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [activity, setActivity] = useState(null);
@@ -29,6 +186,7 @@ export default function ActivityDetails({ accessToken }) {
     update_date: "",
     notes: "",
     milestones: "",
+    milestone_id: null,
     quantitative_outcome: "",
     qualitative_outcome: "",
     evaluation_tool_reference: "",
@@ -115,6 +273,7 @@ export default function ActivityDetails({ accessToken }) {
       body: JSON.stringify({
         activity_id: Number(id),
         ...form,
+        milestone_id: form.milestone_id ? Number(form.milestone_id) : null,
       }),
     });
 
@@ -123,6 +282,7 @@ export default function ActivityDetails({ accessToken }) {
       update_date: "",
       notes: "",
       milestones: "",
+      milestone_id: null,
       quantitative_outcome: "",
       qualitative_outcome: "",
       evaluation_tool_reference: "",
@@ -378,27 +538,30 @@ export default function ActivityDetails({ accessToken }) {
             Print
           </button>
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+          {/* Status update — hidden for read-only users */}
+          {!isReadOnly && (
+            <>
+              <div className="w-px h-6 bg-gray-300 mx-1" />
 
-          {/* Status update */}
-          <select
-            value={statusValue}
-            onChange={e => setStatusValue(e.target.value)}
-            className="border rounded-lg px-3 py-1 text-sm"
-          >
-            <option value="planned">Planned</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+              <select
+                value={statusValue}
+                onChange={e => setStatusValue(e.target.value)}
+                className="border rounded-lg px-3 py-1 text-sm"
+              >
+                <option value="planned">Planned</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
 
-          <button
-            onClick={updateStatus}
-            disabled={updatingStatus || statusValue === activity.status}
-            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Update Status
-          </button>
+              <button
+                onClick={updateStatus}
+                disabled={updatingStatus || statusValue === activity.status}
+                className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              >
+                Update Status
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -497,17 +660,19 @@ export default function ActivityDetails({ accessToken }) {
       <div className="bg-white rounded-xl shadow p-6 space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-800">Milestones</h3>
-          <button
-            onClick={() => setShowMilestoneForm(p => !p)}
-            className="no-print flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-          >
-            <FaPlus size={11} />
-            {showMilestoneForm ? "Cancel" : "Add Milestone"}
-          </button>
+          {!isReadOnly && (
+            <button
+              onClick={() => setShowMilestoneForm(p => !p)}
+              className="no-print flex items-center gap-1.5 bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+            >
+              <FaPlus size={11} />
+              {showMilestoneForm ? "Cancel" : "Add Milestone"}
+            </button>
+          )}
         </div>
 
         {/* Add form */}
-        {showMilestoneForm && (
+        {!isReadOnly && showMilestoneForm && (
           <form onSubmit={submitMilestone} className="no-print bg-gray-50 border rounded-xl p-4 space-y-3 text-sm">
             <input
               type="text"
@@ -551,6 +716,7 @@ export default function ActivityDetails({ accessToken }) {
             {milestones.map(m => {
               const today = new Date().toISOString().slice(0, 10);
               const overdue = m.due_date && m.due_date < today && !m.is_achieved;
+              const updateCount = progressUpdates.filter(p => p.milestone_id === m.id).length;
               return (
                 <li
                   key={m.id}
@@ -562,18 +728,28 @@ export default function ActivityDetails({ accessToken }) {
                       : "bg-gray-50 border-gray-200"
                   }`}
                 >
-                  {/* Checkbox */}
-                  <button
-                    onClick={() => toggleMilestone(m.id)}
-                    title={m.is_achieved ? "Mark as not achieved" : "Mark as achieved"}
-                    className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition ${
-                      m.is_achieved
-                        ? "bg-green-500 border-green-500 text-white"
-                        : "border-gray-400 hover:border-indigo-500"
-                    }`}
-                  >
-                    {m.is_achieved && <FaCheck size={9} />}
-                  </button>
+                  {/* Checkbox — interactive for writers, display-only for read-only */}
+                  {!isReadOnly ? (
+                    <button
+                      onClick={() => toggleMilestone(m.id)}
+                      title={m.is_achieved ? "Mark as not achieved" : "Mark as achieved"}
+                      className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition ${
+                        m.is_achieved
+                          ? "bg-green-500 border-green-500 text-white"
+                          : "border-gray-400 hover:border-indigo-500"
+                      }`}
+                    >
+                      {m.is_achieved && <FaCheck size={9} />}
+                    </button>
+                  ) : (
+                    <div
+                      className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        m.is_achieved ? "bg-green-500 border-green-500 text-white" : "border-gray-300"
+                      }`}
+                    >
+                      {m.is_achieved && <FaCheck size={9} />}
+                    </div>
+                  )}
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
@@ -594,17 +770,24 @@ export default function ActivityDetails({ accessToken }) {
                           Achieved: {m.achieved_date}
                         </span>
                       )}
+                      {updateCount > 0 && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full font-medium">
+                          {updateCount} progress update{updateCount !== 1 ? "s" : ""}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Delete */}
-                  <button
-                    onClick={() => deleteMilestone(m.id)}
-                    className="no-print flex-shrink-0 text-gray-300 hover:text-red-500 transition mt-0.5"
-                    title="Delete milestone"
-                  >
-                    <FaTrash size={13} />
-                  </button>
+                  {/* Delete — hidden for read-only users */}
+                  {!isReadOnly && (
+                    <button
+                      onClick={() => deleteMilestone(m.id)}
+                      className="no-print flex-shrink-0 text-gray-300 hover:text-red-500 transition mt-0.5"
+                      title="Delete milestone"
+                    >
+                      <FaTrash size={13} />
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -612,28 +795,42 @@ export default function ActivityDetails({ accessToken }) {
         )}
       </div>
 
+      {/* ── Milestone Timeline (Gantt) ──────────────────────────── */}
+      {milestones.length > 0 && (
+        <div className="bg-white rounded-xl shadow p-6 space-y-4 no-print">
+          <h3 className="text-lg font-semibold text-gray-800">Milestone Timeline</h3>
+          <MilestoneGantt
+            activity={activity}
+            milestones={milestones}
+            progressUpdates={progressUpdates}
+          />
+        </div>
+      )}
+
       {/* Progress */}
 
         <div className="bg-white rounded-2xl shadow-md p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">Progress Updates</h3>
-            <button
-              onClick={() => {
-                setShowProgressForm(prev => !prev);
+            {!isReadOnly && (
+              <button
+                onClick={() => {
+                  setShowProgressForm(prev => !prev);
 
-                // wait for the DOM to update if the form appears
-                setTimeout(() => {
-                  document
-                    .getElementById("add_new_progress")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }, 0);
-              }}
-              className="no-print flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-            >
-              <FaPlus size={11} />
-              {showProgressForm ? "Cancel" : "Add Progress Update"}
-            </button>
+                  // wait for the DOM to update if the form appears
+                  setTimeout(() => {
+                    document
+                      .getElementById("add_new_progress")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 0);
+                }}
+                className="no-print flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+              >
+                <FaPlus size={11} />
+                {showProgressForm ? "Cancel" : "Add Progress Update"}
+              </button>
+            )}
         </div>
 
         {/* Updates Timeline */}
@@ -660,11 +857,19 @@ export default function ActivityDetails({ accessToken }) {
                     key={p.id}
                     className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:shadow-sm transition"
                     >
-                    {/* Date */}
-                    <div className="flex justify-between items-center mb-1">
+                    {/* Date + linked milestone badge */}
+                    <div className="flex flex-wrap justify-between items-center mb-1 gap-2">
                         <span className="text-sm font-semibold text-indigo-600">
                         {new Date(p.update_date).toLocaleDateString()}
                         </span>
+                        {p.milestone_id && (() => {
+                          const linked = milestones.find(m => m.id === p.milestone_id);
+                          return linked ? (
+                            <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                              🎯 {linked.title}
+                            </span>
+                          ) : null;
+                        })()}
                     </div>
 
                     {/* Notes */}
@@ -724,9 +929,9 @@ export default function ActivityDetails({ accessToken }) {
             </div>  
         )}
 
-        {/* Add Progress Form */}
+        {/* Add Progress Form — hidden for read-only users */}
         <div id="add_new_progress" className="no-print">
-        {showProgressForm && (
+        {!isReadOnly && showProgressForm && (
             <form
             onSubmit={submitProgress}
             className="bg-gray-50 border rounded-xl p-5 space-y-4 text-xs"
@@ -753,12 +958,32 @@ export default function ActivityDetails({ accessToken }) {
             />
 
             <textarea
-                placeholder="Milestones"
+                placeholder="Milestone notes (free text)"
                 className="w-full border rounded-lg px-3 py-2"
                 onChange={e =>
                 setForm(f => ({ ...f, milestones: e.target.value }))
                 }
             />
+
+            {/* Link to a specific milestone */}
+            {milestones.length > 0 && (
+              <div className="space-y-1">
+                <label className="text-gray-500 text-xs">Link to milestone (optional)</label>
+                <select
+                  value={form.milestone_id ?? ""}
+                  onChange={e => setForm(f => ({ ...f, milestone_id: e.target.value ? Number(e.target.value) : null }))}
+                  className="w-full border rounded-lg px-3 py-2 bg-white text-xs"
+                >
+                  <option value="">— Not linked to a specific milestone —</option>
+                  {milestones.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.is_achieved ? "✓ " : m.due_date && m.due_date < new Date().toISOString().slice(0,10) ? "⚠ " : "○ "}
+                      {m.title}{m.due_date ? ` (due ${m.due_date})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-3">
                 <input

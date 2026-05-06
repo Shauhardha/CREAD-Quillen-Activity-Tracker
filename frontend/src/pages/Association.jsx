@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { FaTrash } from "react-icons/fa";
 
 export default function ActivityAssociations({ accessToken }) {
+  const { isReadOnly } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [activeTab, setActiveTab] = useState("goals"); // "goals" or "wealth" or "stakeholders"
@@ -130,6 +132,22 @@ export default function ActivityAssociations({ accessToken }) {
   };
 
   const currentActivity = activities.find(a => a.id === Number(activityId));
+
+  // Block read-only users entirely
+  if (isReadOnly) {
+    return (
+      <div className="max-w-5xl mx-auto p-4 mt-10 flex flex-col items-center gap-4 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-md w-full">
+          <p className="text-4xl mb-3">🔒</p>
+          <h2 className="text-lg font-semibold text-red-700 mb-2">Access Restricted</h2>
+          <p className="text-sm text-red-600">
+            You do not have permission to access the Associate Activities page.
+            Contact an admin if you believe this is an error.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-8">

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { API_BASE } from "../config";
 import { FaTrash, FaEdit } from "react-icons/fa";
@@ -6,6 +7,7 @@ import { FaTrash, FaEdit } from "react-icons/fa";
 const API_URL = `${API_BASE}/misc/funding-sources`;
 
 export default function FundingSourcesManager() {
+  const { isReadOnly } = useOutletContext() ?? {};
   const [sources, setSources] = useState([]);
   const [sourceName, setSourceName] = useState("");
   const [description, setDescription] = useState("");
@@ -165,11 +167,21 @@ export default function FundingSourcesManager() {
     <div className="max-w-4xl mx-auto mt-6">
       <h2 className="text-2xl font-bold mb-8">Manage Funding Sources</h2>
       <div className=" bg-gray-50 p-6 rounded-xl shadow overflow-x-auto">
-        <h3 className="text-lg font-semibold mb-2">
-          {editingId ? "Update" : "Add"} Funding Source
-        </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-3 mb-6 text-sm">
+        {/* View-only banner for non-admin users */}
+        {isReadOnly && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 mb-4">
+            You have view-only access. Contact an admin to make changes.
+          </div>
+        )}
+
+        {!isReadOnly && (
+          <>
+            <h3 className="text-lg font-semibold mb-2">
+              {editingId ? "Update" : "Add"} Funding Source
+            </h3>
+
+            <form onSubmit={handleSubmit} className="space-y-3 mb-6 text-sm">
           <input
             type="text"
             required
@@ -239,6 +251,8 @@ export default function FundingSourcesManager() {
             )}
           </div>
         </form>
+          </>
+        )}
 
         {error && <p className="text-red-600 mb-4">{error}</p>}
 
@@ -277,22 +291,24 @@ export default function FundingSourcesManager() {
                   )}
                 </div>
 
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => startEdit(item)}
-                    className="text-blue-600 text-base"
-                    disabled={loading}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-600 text-base"
-                    disabled={loading}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
+                {!isReadOnly && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => startEdit(item)}
+                      className="text-blue-600 text-base"
+                      disabled={loading}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 text-base"
+                      disabled={loading}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
             </div>

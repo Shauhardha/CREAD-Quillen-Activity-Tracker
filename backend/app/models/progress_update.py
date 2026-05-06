@@ -8,6 +8,7 @@ class ProgressUpdate(Base):
 
     id = Column(Integer, primary_key=True)
     activity_id = Column(Integer, ForeignKey("activities.id"))
+    milestone_id = Column(Integer, ForeignKey("milestones.id"), nullable=True)
     update_date = Column(Date, nullable=False)
     notes = Column(Text)
     milestones = Column(Text)
@@ -19,4 +20,4 @@ class ProgressUpdate(Base):
     deleted_at = Column(TIMESTAMP, nullable=True)
 
     activity = relationship("Activity", back_populates="progress_updates")
-    creator = relationship("User")
+    creator  = relationship("User")
