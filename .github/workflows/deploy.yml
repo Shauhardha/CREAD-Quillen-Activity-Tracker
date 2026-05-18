@@ -59,8 +59,10 @@ jobs:
             set -e
 
             echo "=== Backend Deploy ==="
-            cd /home/ec2-user/CREAD-Quillen-Activity-Tracker/backend
-            git pull origin main
+            cd /home/ec2-user/CREAD-Quillen-Activity-Tracker
+            git fetch origin main
+            git reset --hard origin/main
+            cd backend
             source venv/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart cread-backend
