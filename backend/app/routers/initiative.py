@@ -4,14 +4,14 @@ from typing import List
 from app.database import get_db 
 from app.models.initiative import Initiative
 from app.schemas.initiative import InitiativeCreate, InitiativeOut
-from app.auth import get_current_user, require_admin
+from app.auth import get_current_user, require_admin, require_writer
 
 router = APIRouter(
     prefix="/api/initiatives",
     tags=["Initiatives"]
 )
 
-@router.post("/", dependencies=[Depends(require_admin)], response_model=InitiativeOut, status_code=201)
+@router.post("/", dependencies=[Depends(require_writer)], response_model=InitiativeOut, status_code=201)
 def create_initiative(payload: InitiativeCreate, db: Session = Depends(get_db)):
     initiative = Initiative(name=payload.name)
     db.add(initiative)
@@ -20,10 +20,10 @@ def create_initiative(payload: InitiativeCreate, db: Session = Depends(get_db)):
     return initiative
 
 @router.get("/", response_model=List[InitiativeOut])
-def get_initiatives(db: Session = Depends(get_db)):
+def get_initiatives(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return db.query(Initiative).all()
 
-@router.put("/{initiative_id}", dependencies=[Depends(require_admin)], response_model=InitiativeOut)
+@router.put("/{initiative_id}", dependencies=[Depends(require_writer)], response_model=InitiativeOut)
 def update_initiative(
     initiative_id: int,
     payload: InitiativeCreate,
@@ -38,7 +38,7 @@ def update_initiative(
     db.refresh(initiative)
     return initiative
 
-@router.delete("/{initiative_id}", dependencies=[Depends(require_admin)], status_code=204)
+@router.delete("/{initiative_id}", dependencies=[Depends(require_writer)], status_code=204)
 def delete_initiative(
     initiative_id: int,
     db: Session = Depends(get_db)

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { FaEye, FaClipboardCheck, FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
-export default function ActivityList({ accessToken }) {
+export default function ActivityList() {
   const navigate = useNavigate();
+  const outlet = useOutletContext();
+  const accessToken = outlet?.accessToken;
   const headers = useMemo(
     () => ({ Authorization: `Bearer ${accessToken}` }),
     [accessToken]
@@ -38,6 +40,7 @@ export default function ActivityList({ accessToken }) {
   };
 
   useEffect(() => {
+    if (!accessToken) return;
     setLoading(true);
     Promise.all([
       fetch(`${API_BASE}/activities/`, { headers }).then(r => {

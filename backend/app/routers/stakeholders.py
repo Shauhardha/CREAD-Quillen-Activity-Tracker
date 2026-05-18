@@ -6,6 +6,7 @@ from app.schemas.stakeholder import StakeholderCreate, StakeholderOut
 from typing import List
 from datetime import datetime
 from sqlalchemy import text
+from app.auth import get_current_user, require_writer
 
 router = APIRouter(
     prefix="/api/stakeholders",
@@ -13,7 +14,7 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=StakeholderOut)
-def create_stakeholder(payload: StakeholderCreate, db: Session = Depends(get_db)):
+def create_stakeholder(payload: StakeholderCreate, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
     stakeholder = Stakeholder(**payload.dict())
     db.add(stakeholder)
     db.commit()
@@ -21,23 +22,23 @@ def create_stakeholder(payload: StakeholderCreate, db: Session = Depends(get_db)
     return stakeholder
 
 @router.get("/", response_model=List[StakeholderOut])
-def list_stakeholders(db: Session = Depends(get_db)):
+def list_stakeholders(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return db.query(Stakeholder).filter(Stakeholder.deleted_at.is_(None)).all()
 
 @router.get("/{id}", response_model=StakeholderOut)
-def get_stakeholder(id: int, db: Session = Depends(get_db)):
+def get_stakeholder(id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     stakeholder = db.query(Stakeholder).filter(Stakeholder.id == id).first()
     if not stakeholder:
         raise HTTPException(404, "Stakeholder not found")
     return stakeholder
 
 @router.put("/{id}", response_model=StakeholderOut)
-def update_stakeholder(id: int, payload: StakeholderCreate, db: Session = Depends(get_db)):
+def update_stakeholder(id: int, payload: StakeholderCreate, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
     stakeholder = (
         db.query(Stakeholder)
         .options(joinedload(Stakeholder.location))
         .filter(Stakeholder.id == id).first()
-    )    
+    )
     if not stakeholder:
         raise HTTPException(404, "Stakeholder not found")
 
@@ -49,7 +50,7 @@ def update_stakeholder(id: int, payload: StakeholderCreate, db: Session = Depend
     return stakeholder
 
 @router.delete("/{id}")
-def delete_stakeholder(id: int, db: Session = Depends(get_db)):
+def delete_stakeholder(id: int, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
     stakeholder = db.query(Stakeholder).filter(Stakeholder.id == id).first()
     if not stakeholder:
         raise HTTPException(404, "Stakeholder not found")
@@ -59,11 +60,7 @@ def delete_stakeholder(id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/activity/{id}")
-def get_activity_stakeholders(id: int, db: Session = Depends(get_db)):
-    """
-    Get all lead staff members for a specific activity, with their names.
-    Ordered by user name.
-    """
+def get_activity_stakeholders(id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT al.activity_id, al.stakeholder_id, al.role, al.notes,
         a.title AS activity_name, s.name as stakeholder_name
@@ -71,7 +68,7 @@ def get_activity_stakeholders(id: int, db: Session = Depends(get_db)):
         LEFT JOIN stakeholders s ON s.id = al.stakeholder_id
         LEFT JOIN activities a ON a.id = al.activity_id
         WHERE a.id = :id
-        ORDER BY s.name ASC                 
+        ORDER BY s.name ASC
     """)
 
     results = db.execute(query, {"id": id}).fetchall()
@@ -79,17 +76,14 @@ def get_activity_stakeholders(id: int, db: Session = Depends(get_db)):
     if not results:
         return []
 
-    # Convert rows to list of dicts for clean JSON response
-    stakeholders = [
+    return [
         {
             "activity_id": row.activity_id,
             "stakeholder_id": row.stakeholder_id,
             "role": row.role,
             "notes": row.notes,
             "activity_name": row.activity_name,
-            "stakeholder_name": row.stakeholder_name or "Unknown"  # Handle possible NULL names
+            "stakeholder_name": row.stakeholder_name or "Unknown"
         }
         for row in results
     ]
-
-    return stakeholders

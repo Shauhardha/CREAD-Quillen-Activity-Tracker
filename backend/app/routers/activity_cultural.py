@@ -8,6 +8,7 @@ from app.models.miscellaneous import CulturalWealthTag
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import List
+from app.auth import get_current_user, require_writer
 
 router = APIRouter(
     prefix="/api/activity-cultural-wealth",
@@ -24,7 +25,7 @@ class ActivityCulturalWealthLinkedOut(BaseModel):
         from_attributes = True
 
 @router.get("/", response_model=List[ActivityCulturalWealthLinkedOut])
-def list_activity_cultural_wealth(db: Session = Depends(get_db)):
+def list_activity_cultural_wealth(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     sql = text("""
         SELECT 
             acw.activity_id,
@@ -53,7 +54,8 @@ def list_activity_cultural_wealth(db: Session = Depends(get_db)):
 def add_activity_cultural_wealth(
     activity_id: int,
     cultural_wealth_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     exists = db.query(ActivityCulturalWealth).filter_by(
         activity_id=activity_id,
@@ -74,7 +76,8 @@ def add_activity_cultural_wealth(
 def delete_activity_cultural_wealth(
     activity_id: int,
     cultural_wealth_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     assoc = db.query(ActivityCulturalWealth).filter_by(
         activity_id=activity_id,
@@ -88,7 +91,7 @@ def delete_activity_cultural_wealth(
     return {"status": "deleted"}
 
 @router.get("/activity/{activity_id}", response_model=List[ActivityCulturalWealthLinkedOut])
-def get_wealth_for_activity(activity_id: int, db: Session = Depends(get_db)):
+def get_wealth_for_activity(activity_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     rows = db.execute(text("""
         SELECT 
             acw.activity_id,
@@ -112,9 +115,10 @@ def get_wealth_for_activity(activity_id: int, db: Session = Depends(get_db)):
     ]
 
 @router.get("/by-activity/{activity_id}")
-def get_wealth_for_activity(
+def get_cultural_wealth_by_activity(
     activity_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     return (
         db.query(

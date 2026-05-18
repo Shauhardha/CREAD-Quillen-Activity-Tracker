@@ -5,8 +5,8 @@ import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaSave, FaEdit, FaTimesCircle } from "react-icons/fa";
 
 
-export default function ActivityTypes({ accessToken }) {
-    const { isReadOnly } = useOutletContext() ?? {};
+export default function ActivityTypes() {
+    const { isReadOnly, accessToken } = useOutletContext() ?? {};
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ id: null, activityType_name: "", description: "" });

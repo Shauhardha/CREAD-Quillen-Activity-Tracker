@@ -8,7 +8,8 @@ from app.models.strategic_goal import StrategicGoal
 from typing import List
 from pydantic import BaseModel
 from sqlalchemy import text
-    
+from app.auth import get_current_user, require_writer
+
 
 router = APIRouter(
     prefix="/api/activity-goals",
@@ -25,9 +26,9 @@ class ActivityGoalLinkedOut(BaseModel):
         from_attributes = True
 
 @router.get("/", response_model=List[ActivityGoalLinkedOut])
-def list_activity_goals(db: Session = Depends(get_db)):
+def list_activity_goals(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     sql = text("""
-        SELECT 
+        SELECT
             acw.activity_id,
             a.title AS activity_title,
             acw.goal_id,
@@ -54,7 +55,8 @@ def list_activity_goals(db: Session = Depends(get_db)):
 def add_activity_goal(
     activity_id: int,
     goal_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     exists = db.query(ActivityGoal).filter_by(
         activity_id=activity_id,
@@ -72,7 +74,8 @@ def add_activity_goal(
 def delete_activity_goal(
     activity_id: int,
     goal_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     assoc = db.query(ActivityGoal).filter_by(
         activity_id=activity_id,
@@ -86,9 +89,9 @@ def delete_activity_goal(
     return {"status": "deleted"}
 
 @router.get("/activity/{activity_id}", response_model=List[ActivityGoalLinkedOut])
-def get_goals_for_activity(activity_id: int, db: Session = Depends(get_db)):
+def get_goals_for_activity(activity_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     rows = db.execute(text("""
-        SELECT 
+        SELECT
             ag.activity_id,
             a.title AS activity_title,
             ag.goal_id,
@@ -110,9 +113,10 @@ def get_goals_for_activity(activity_id: int, db: Session = Depends(get_db)):
     ]
 
 @router.get("/by-activity/{activity_id}")
-def get_goals_for_activity(
+def get_strategic_goals_by_activity(
     activity_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     return (
         db.query(

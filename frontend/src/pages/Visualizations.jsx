@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
@@ -51,6 +52,8 @@ function ChartCard({ title, subtitle, children, className = "" }) {
 
 /* ═══════════════════════════════════════════════════════════════ */
 export default function Visualizations() {
+  const { accessToken } = useOutletContext() ?? {};
+
   const [summary,            setSummary]            = useState({});
   const [monthlyTrend,       setMonthlyTrend]       = useState([]);
   const [fundingBySource,    setFundingBySource]    = useState([]);
@@ -68,13 +71,15 @@ export default function Visualizations() {
 
   /* ── Fetch all chart data in parallel ───────────────────────── */
   useEffect(() => {
+    if (!accessToken) return;
+    const headers = { Authorization: `Bearer ${accessToken}` };
     Promise.all([
-      fetch(`${API_BASE}/dashboard/activity-status-summary`).then(r => r.json()).catch(() => ({})),
-      fetch(`${API_BASE}/dashboard/monthly-trend`          ).then(r => r.json()).catch(() => []),
-      fetch(`${API_BASE}/dashboard/funding-by-source`      ).then(r => r.json()).catch(() => []),
-      fetch(`${API_BASE}/dashboard/initiative-progress`    ).then(r => r.json()).catch(() => []),
-      fetch(`${API_BASE}/dashboard/cultural-wealth-frequency`).then(r => r.json()).catch(() => []),
-      fetch(`${API_BASE}/dashboard/update-frequency`       ).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/activity-status-summary`,    { headers }).then(r => r.json()).catch(() => ({})),
+      fetch(`${API_BASE}/dashboard/monthly-trend`,              { headers }).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/funding-by-source`,          { headers }).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/initiative-progress`,        { headers }).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/cultural-wealth-frequency`,  { headers }).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/update-frequency`,           { headers }).then(r => r.json()).catch(() => []),
     ])
       .then(([sum, trend, funding, inits, cw, updates]) => {
         setSummary(sum ?? {});
@@ -94,18 +99,20 @@ export default function Visualizations() {
       })
       .catch(() => setError("Unable to load visualization data."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [accessToken]);
 
   /* ── Fetch map data separately (doesn't block charts) ───────── */
   useEffect(() => {
+    if (!accessToken) return;
+    const headers = { Authorization: `Bearer ${accessToken}` };
     Promise.all([
-      fetch(`${API_BASE}/dashboard/activities`  ).then(r => r.json()).catch(() => []),
-      fetch(`${API_BASE}/dashboard/stakeholders`).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/activities`,   { headers }).then(r => r.json()).catch(() => []),
+      fetch(`${API_BASE}/dashboard/stakeholders`, { headers }).then(r => r.json()).catch(() => []),
     ]).then(([acts, stks]) => {
       setActivitiesMap(Array.isArray(acts) ? acts : []);
       setStakeholders(Array.isArray(stks) ? stks : []);
     }).finally(() => setMapLoading(false));
-  }, []);
+  }, [accessToken]);
 
   /* ── Derived data ────────────────────────────────────────────── */
 

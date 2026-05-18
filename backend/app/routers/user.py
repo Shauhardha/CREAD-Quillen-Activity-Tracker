@@ -61,18 +61,34 @@ def add_user(
 
         # Add to Cognito group — use .value to get plain string from enum
         role_str = payload.role.value if hasattr(payload.role, 'value') else str(payload.role)
-        cognito.admin_add_user_to_group(
-            UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
-            Username=payload.email,
-            GroupName=role_str
-        )
+        try:
+            cognito.admin_add_user_to_group(
+                UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
+                Username=payload.email,
+                GroupName=role_str
+            )
+        except Exception as group_err:
+            # Rollback: remove from DB and Cognito to avoid inconsistent state
+            db.delete(new_user)
+            db.commit()
+            try:
+                cognito.admin_delete_user(
+                    UserPoolId=os.getenv("COGNITO_USER_POOL_ID"),
+                    Username=payload.email
+                )
+            except Exception:
+                pass  # Best-effort Cognito cleanup
+            raise HTTPException(
+                status_code=500,
+                detail=f"User created but group assignment failed — rolled back: {str(group_err)}"
+            )
 
         return {"message": "User added", "sub": sub, "id": new_user.id}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        print("❌ admin_create_user FAILED")
-        print("ERROR TYPE:", type(e))
-        print("ERROR:", str(e))
+        print(f"❌ add_user FAILED: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -80,7 +96,7 @@ def add_user(
 def get_users(db: Session = Depends(get_db), current_user=Depends(require_admin)):
     """Return all users from the `users` table. Admin-only."""
     try:
-        users = db.query(User).filter(User.deleted_at == None).all()
+        users = db.query(User).filter(User.deleted_at.is_(None)).all()
         return users
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -93,7 +109,7 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
     try:
         from app.schemas.user import UserUpdate
 
-        user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+        user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
@@ -123,11 +139,11 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
                         Username=user.email,
                         GroupName=old_role_str
                     )
-                    print(f"✅ Removed {user.email} from Cognito group '{old_role_str}'")
+                    print(f"✅ Removed user #{user.id} from Cognito group '{old_role_str}'")
                 except cognito.exceptions.ResourceNotFoundException:
                     print(f"ℹ️  Cognito group '{old_role_str}' not found — skipping removal")
                 except Exception as e:
-                    print(f"⚠️  Could not remove {user.email} from Cognito group '{old_role_str}': {e}")
+                    print(f"⚠️  Could not remove user #{user.id} from Cognito group '{old_role_str}': {e}")
 
             # ── Add user to new group (group already exists in Cognito) ──
             try:
@@ -136,9 +152,9 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
                     Username=user.email,
                     GroupName=new_role_str
                 )
-                print(f"✅ Added {user.email} to Cognito group '{new_role_str}'")
+                print(f"✅ Added user #{user.id} to Cognito group '{new_role_str}'")
             except Exception as e:
-                print(f"⚠️  Could not add {user.email} to Cognito group '{new_role_str}': {e}")
+                print(f"⚠️  Could not add user #{user.id} to Cognito group '{new_role_str}': {e}")
 
         # is_active -> enable/disable in Cognito
         if payload.is_active is not None and payload.is_active != user.is_active:
@@ -148,12 +164,12 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
             try:
                 if payload.is_active:
                     cognito.admin_enable_user(UserPoolId=pool_id, Username=user.email)
-                    print(f"✅ Enabled Cognito user {user.email}")
+                    print(f"✅ Enabled Cognito user #{user.id}")
                 else:
                     cognito.admin_disable_user(UserPoolId=pool_id, Username=user.email)
-                    print(f"✅ Disabled Cognito user {user.email}")
+                    print(f"✅ Disabled Cognito user #{user.id}")
             except Exception as e:
-                print(f"⚠️  Could not update Cognito enabled status for {user.email}: {e}")
+                print(f"⚠️  Could not update Cognito enabled status for user #{user.id}: {e}")
 
         if updated:
             db.commit()
@@ -171,7 +187,7 @@ def update_user(user_id: int, payload: "UserUpdate", db: Session = Depends(get_d
 def delete_user(user_id: int, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     """Delete user from Cognito user pool and mark deleted_at in the DB (admin-only)."""
     try:
-        user = db.query(User).filter(User.id == user_id, User.deleted_at == None).first()
+        user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 

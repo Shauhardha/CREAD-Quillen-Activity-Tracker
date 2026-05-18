@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { FaEye, FaClipboardCheck, FaUsers } from "react-icons/fa";
 import { BsCheck2Circle } from "react-icons/bs";
@@ -51,8 +51,10 @@ const getStatusDisplay = (status) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════ */
-export default function ActivityList({ accessToken }) {
+export default function ActivityList() {
   const navigate = useNavigate();
+  const outlet   = useOutletContext();
+  const accessToken = outlet?.accessToken;
   const headers  = useMemo(() => ({ Authorization: `Bearer ${accessToken}` }), [accessToken]);
 
   /* ── State ───────────────────────────────────────────────────── */
@@ -72,6 +74,7 @@ export default function ActivityList({ accessToken }) {
 
   /* ── Fetch all dashboard data ────────────────────────────────── */
   useEffect(() => {
+    if (!accessToken) return;
     Promise.all([
       fetch(`${API_BASE}/dashboard/stakeholders`,            { headers }).then(r => r.json()).catch(() => []),
       fetch(`${API_BASE}/dashboard/activity-status-summary`, { headers }).then(r => r.json()).catch(() => ({})),
@@ -97,10 +100,11 @@ export default function ActivityList({ accessToken }) {
       );
       setFundingBySource(Array.isArray(funding) ? funding : []);
     });
-  }, []);   // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accessToken]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Recent activities (top 5) ───────────────────────────────── */
   useEffect(() => {
+    if (!accessToken) return;
     setLoading(true);
     fetch(`${API_BASE}/dashboard/activities`, { headers })
       .then(r => { if (!r.ok) throw new Error("Failed to fetch activities"); return r.json(); })

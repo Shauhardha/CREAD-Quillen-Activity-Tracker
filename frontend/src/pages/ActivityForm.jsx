@@ -88,7 +88,8 @@ export default function ActivityManager() {
 
   /* Load reference data */
   useEffect(() => {
-    const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined;
+    if (!accessToken) return;
+    const headers = { Authorization: `Bearer ${accessToken}` };
 
     fetchUsers();
     fetch(`${API_BASE}/initiatives/`, { headers }).then(r => r.json()).then(setInitiatives);
@@ -263,7 +264,6 @@ export default function ActivityManager() {
       evidence: form.evidence || null,
       sustainability_plan: form.sustainability_plan || null,
     };
-     console.log("Payload being sent:", payload);
 
     const method = editingId ? "PUT" : "POST";
     const url = editingId ? `${API_BASE}/activities/${editingId}` : `${API_BASE}/activities/`;

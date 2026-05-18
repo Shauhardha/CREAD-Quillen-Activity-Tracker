@@ -6,8 +6,8 @@ from app.database import get_db
 from app.models.activity import Activity
 from app.schemas.activity import ActivityCreate, ActivityOut, ActivityStatusUpdate
 from app.models.user import User
-from app.auth import get_current_user
-from sqlalchemy.orm import joinedload  # Add this import at top if not present
+from app.auth import get_current_user, require_writer
+from sqlalchemy.orm import joinedload
 from sqlalchemy import text
 
 router = APIRouter(
@@ -16,10 +16,9 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=ActivityOut)
-def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
     data = payload.dict()
     lead_ids = data.pop("lead_staff_ids", [])
-
 
     # still block legacy field
     data.pop("lead_staff_id", None)
@@ -45,7 +44,7 @@ def create_activity(payload: ActivityCreate, db: Session = Depends(get_db), user
 
 
 @router.get("/export")
-def export_activities(db: Session = Depends(get_db)):
+def export_activities(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             a.id,
@@ -90,7 +89,7 @@ def export_activities(db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[ActivityOut])
-def get_activities(db: Session = Depends(get_db)):
+def get_activities(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     activities = (
         db.query(Activity)
         .options(joinedload(Activity.location))
@@ -107,7 +106,7 @@ def get_activities(db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=ActivityOut)
-def get_activity(id: int, db: Session = Depends(get_db)):
+def get_activity(id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     activity = (
         db.query(Activity)
         .options(joinedload(Activity.location))
@@ -124,8 +123,8 @@ def get_activity(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=ActivityOut)
-def update_activity(id: int, payload: ActivityCreate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
-    activity = db.query(Activity).filter(Activity.id == id).first()
+def update_activity(id: int, payload: ActivityCreate, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
+    activity = db.query(Activity).filter(Activity.id == id, Activity.deleted_at.is_(None)).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
@@ -139,16 +138,13 @@ def update_activity(id: int, payload: ActivityCreate, db: Session = Depends(get_
 
     if lead_ids is not None:
         leads = db.query(User).filter(User.id.in_(lead_ids)).all()
-        activity.leads = leads  # replaces rows in activity_leads
+        activity.leads = leads
 
-    # set updated_by from authenticated user (map cognito sub -> users.id)
     sub = user.get("sub") if user else None
-    # print("Cognito sub from token:", sub)
     if sub:
         db_user = db.query(User).filter(User.cognito_sub == sub).first()
         if db_user:
             activity.updated_by = db_user.id
-            print("User ID:", db_user.id)
 
     db.commit()
     db.refresh(activity)
@@ -156,8 +152,8 @@ def update_activity(id: int, payload: ActivityCreate, db: Session = Depends(get_
 
 
 @router.delete("/{id}")
-def delete_activity(id: int, db: Session = Depends(get_db)):
-    activity = db.query(Activity).filter(Activity.id == id).first()
+def delete_activity(id: int, db: Session = Depends(get_db), user: dict = Depends(require_writer)):
+    activity = db.query(Activity).filter(Activity.id == id, Activity.deleted_at.is_(None)).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
@@ -167,28 +163,28 @@ def delete_activity(id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/details/{id}")
-def get_activity(id: int, db: Session = Depends(get_db)):
+def get_activity_details(id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
-        SELECT 
-            a.id, 
-            a.title, 
+        SELECT
+            a.id,
+            a.title,
             a.description AS activity_desc,
-            a.initiative_id, 
-            i.name AS initiative_name, 
-            a.status, 
-            a.start_date, 
+            a.initiative_id,
+            i.name AS initiative_name,
+            a.status,
+            a.start_date,
             a.end_date,
-            a.location_id, 
-            l.state, 
-            l.county, 
+            a.location_id,
+            l.state,
+            l.county,
             l.city,
-            a.education_level_id, 
-            e.level_name, 
-            a.partnership_type_id, 
-            p.type_name AS partnership_name, 
+            a.education_level_id,
+            e.level_name,
+            a.partnership_type_id,
+            p.type_name AS partnership_name,
             p.description AS partnership_desc,
-            a.funding_source_id, 
-            f.source_name AS funding_name, 
+            a.funding_source_id,
+            f.source_name AS funding_name,
             f.description AS funding_desc,
             a.notes,
             a.activity_type_id,
@@ -214,8 +210,7 @@ def get_activity(id: int, db: Session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Convert Row to dict with proper keys
-    activity_dict = {
+    return {
         "id": result.id,
         "title": result.title,
         "description": result.activity_desc,
@@ -237,8 +232,7 @@ def get_activity(id: int, db: Session = Depends(get_db)):
         "funding_name": result.funding_name,
         "funding_description": result.funding_desc,
         "notes": result.notes,
-        # Keep this if your ActivityOut expects it
-        "lead_staff_ids": [],  # You'll need to fetch separately or add another join
+        "lead_staff_ids": [],
         "activity_type_id": result.activity_type_id,
         "activity_type_name": result.activity_type_name,
         "primary_audience": result.primary_audience,
@@ -249,27 +243,20 @@ def get_activity(id: int, db: Session = Depends(get_db)):
         "sustainability_plan": result.sustainability_plan
     }
 
-    # Note: lead_staff_ids still needs separate handling (see below)
-    # For now, leaving it empty or fetch separately
-
-    return activity_dict
-
 
 @router.put("/{id}/status")
 def update_activity_status(
     id: int,
     payload: ActivityStatusUpdate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_writer),
 ):
-    activity = db.query(Activity).filter(Activity.id == id).first()
+    activity = db.query(Activity).filter(Activity.id == id, Activity.deleted_at.is_(None)).first()
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # Update status only
     activity.status = payload.status
 
-    # Set updated_by (Cognito → users table)
     sub = user.get("sub") if user else None
     if sub:
         db_user = db.query(User).filter(User.cognito_sub == sub).first()

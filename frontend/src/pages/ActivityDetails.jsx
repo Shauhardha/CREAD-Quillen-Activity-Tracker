@@ -161,10 +161,10 @@ function MilestoneGantt({ activity, milestones, progressUpdates }) {
   );
 }
 
-export default function ActivityDetails({ accessToken }) {
+export default function ActivityDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isReadOnly } = useOutletContext() ?? {};
+  const { isReadOnly, accessToken } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [activity, setActivity] = useState(null);
@@ -212,14 +212,15 @@ export default function ActivityDetails({ accessToken }) {
   };
 
   useEffect(() => {
+    if (!accessToken) return;
     Promise.all([
-      fetch(`${API_BASE}/activities/details/${id}`, { headers }).then(r => r.json()),
-      fetch(`${API_BASE}/activity-goals/activity/${id}`, { headers }).then(r => r.json()),
+      fetch(`${API_BASE}/activities/details/${id}`,              { headers }).then(r => r.json()),
+      fetch(`${API_BASE}/activity-goals/activity/${id}`,         { headers }).then(r => r.json()),
       fetch(`${API_BASE}/activity-cultural-wealth/activity/${id}`, { headers }).then(r => r.json()),
-      fetch(`${API_BASE}/progress-updates/?activity_id=${id}`, { headers }).then(r => r.json()),
-      fetch(`${API_BASE}/activities/leads/${id}`, { headers }).then(r => r.json()),
-      fetch(`${API_BASE}/stakeholders/activity/${id}`, { headers }).then(r => r.json()),
-      fetch(`${API_BASE}/milestones/?activity_id=${id}`).then(r => r.json()),
+      fetch(`${API_BASE}/progress-updates/?activity_id=${id}`,   { headers }).then(r => r.json()),
+      fetch(`${API_BASE}/activities/leads/${id}`,                { headers }).then(r => r.json()),
+      fetch(`${API_BASE}/stakeholders/activity/${id}`,           { headers }).then(r => r.json()),
+      fetch(`${API_BASE}/milestones/?activity_id=${id}`,         { headers }).then(r => r.json()),
     ]).then(([act, gls, wts, prog, leads, stk, mils]) => {
       setActivity(act);
       setGoals(gls);
@@ -229,7 +230,7 @@ export default function ActivityDetails({ accessToken }) {
       setStakeholders(stk);
       setMilestones(Array.isArray(mils) ? mils : []);
     });
-  }, [id]);
+  }, [id, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredProgress = useMemo(() => {
       if (!search.trim()) return progressUpdates;

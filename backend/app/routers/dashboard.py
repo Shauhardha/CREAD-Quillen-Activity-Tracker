@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from app.database import get_db  # adjust import if needed
+from app.database import get_db
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 @router.get("/activities")
-def dashboard_activities(db: Session = Depends(get_db)):
+def dashboard_activities(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             a.id,
@@ -38,7 +39,7 @@ def dashboard_activities(db: Session = Depends(get_db)):
     return result
 
 @router.get("/stakeholders")
-def dashboard_stakeholders(db: Session = Depends(get_db)):
+def dashboard_stakeholders(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             s.id,
@@ -59,7 +60,7 @@ def dashboard_stakeholders(db: Session = Depends(get_db)):
 
 
 @router.get("/activity-status-summary")
-def activity_status_summary(db: Session = Depends(get_db)):
+def activity_status_summary(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             COUNT(*) AS total,
@@ -74,7 +75,7 @@ def activity_status_summary(db: Session = Depends(get_db)):
 
 
 @router.get("/counties-served")
-def counties_served(db: Session = Depends(get_db)):
+def counties_served(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT COUNT(DISTINCT l.county) AS counties_served
         FROM activities a
@@ -86,7 +87,7 @@ def counties_served(db: Session = Depends(get_db)):
 
 
 @router.get("/stakeholder-count")
-def stakeholder_count(db: Session = Depends(get_db)):
+def stakeholder_count(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT COUNT(*) AS total_stakeholders
         FROM stakeholders
@@ -97,7 +98,7 @@ def stakeholder_count(db: Session = Depends(get_db)):
 
 
 @router.get("/activity-type-breakdown")
-def activity_type_breakdown(db: Session = Depends(get_db)):
+def activity_type_breakdown(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             COALESCE(at.activityType_name, 'Unclassified') AS activity_type,
@@ -112,7 +113,7 @@ def activity_type_breakdown(db: Session = Depends(get_db)):
 
 
 @router.get("/calendar-activities")
-def calendar_activities(db: Session = Depends(get_db)):
+def calendar_activities(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             a.id,
@@ -139,7 +140,7 @@ def calendar_activities(db: Session = Depends(get_db)):
 
 
 @router.get("/initiative-progress")
-def initiative_progress(db: Session = Depends(get_db)):
+def initiative_progress(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     query = text("""
         SELECT
             i.name AS initiative_name,
@@ -156,7 +157,7 @@ def initiative_progress(db: Session = Depends(get_db)):
 
 
 @router.get("/monthly-trend")
-def monthly_trend(db: Session = Depends(get_db)):
+def monthly_trend(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     """Returns activity counts grouped by month (YYYY-MM) for the last 24 months."""
     query = text("""
         SELECT
@@ -173,7 +174,7 @@ def monthly_trend(db: Session = Depends(get_db)):
 
 
 @router.get("/funding-by-source")
-def funding_by_source(db: Session = Depends(get_db)):
+def funding_by_source(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     """Returns activity count and total funding amount grouped by funding source."""
     query = text("""
         SELECT
@@ -190,7 +191,7 @@ def funding_by_source(db: Session = Depends(get_db)):
 
 
 @router.get("/cultural-wealth-frequency")
-def cultural_wealth_frequency(db: Session = Depends(get_db)):
+def cultural_wealth_frequency(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     """Returns how many activities are tagged with each cultural wealth capital."""
     query = text("""
         SELECT
@@ -209,7 +210,7 @@ def cultural_wealth_frequency(db: Session = Depends(get_db)):
 
 
 @router.get("/update-frequency")
-def update_frequency(db: Session = Depends(get_db)):
+def update_frequency(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     """Returns progress-update counts grouped by month for the last 12 months."""
     query = text("""
         SELECT

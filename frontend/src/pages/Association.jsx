@@ -3,8 +3,8 @@ import { useOutletContext } from "react-router-dom";
 import { API_BASE } from "../config";
 import { FaTrash } from "react-icons/fa";
 
-export default function ActivityAssociations({ accessToken }) {
-  const { isReadOnly } = useOutletContext() ?? {};
+export default function ActivityAssociations() {
+  const { isReadOnly, accessToken } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [activeTab, setActiveTab] = useState("goals"); // "goals" or "wealth" or "stakeholders"
@@ -29,6 +29,7 @@ export default function ActivityAssociations({ accessToken }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!accessToken) return;
     Promise.all([
       fetch(`${API_BASE}/activities`, { headers }).then(r => r.json()),
       fetch(`${API_BASE}/strategic-goals`, { headers }).then(r => r.json()),

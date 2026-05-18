@@ -7,6 +7,7 @@ from app.models.stakeholder import Stakeholder
 from app.schemas.association import ActivityStakeholderOut
 from typing import List
 from sqlalchemy import text
+from app.auth import get_current_user, require_writer
 
 router = APIRouter(
     prefix="/api/activity-stakeholders",
@@ -14,7 +15,7 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[ActivityStakeholderOut])
-def list_activity_stakeholders(db: Session = Depends(get_db)):
+def list_activity_stakeholders(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     sql = text("""
         SELECT 
             ast.activity_id,
@@ -47,7 +48,8 @@ def add_activity_stakeholder(
     stakeholder_id: int = Query(...),
     role: str = Query(...),
     notes: str = Query(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     exists = db.query(activity_stakeholders).filter_by(
         activity_id=activity_id, stakeholder_id=stakeholder_id
@@ -70,7 +72,8 @@ def add_activity_stakeholder(
 def delete_activity_stakeholder(
     activity_id: int = Query(...),
     stakeholder_id: int = Query(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_writer),
 ):
     assoc = db.query(activity_stakeholders).filter_by(
         activity_id=activity_id, stakeholder_id=stakeholder_id

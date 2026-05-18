@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime
 
 from app.database import get_db
-from app.auth import require_admin
+from app.auth import require_admin, require_writer, get_current_user
 
 from app.models.miscellaneous import (
     PartnershipType,
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/api/misc", tags=["Miscellaneous"])
 # --------------------------------------------------
 # Partnership Types
 # --------------------------------------------------
-@router.post("/partnership-types", response_model=PartnershipTypeOut, dependencies=[Depends(require_admin)])
+@router.post("/partnership-types", response_model=PartnershipTypeOut, dependencies=[Depends(require_writer)])
 def add_partnership_type(payload: PartnershipTypeCreate, db: Session = Depends(get_db)):
     item = PartnershipType(**payload.dict())
     db.add(item)
@@ -38,15 +38,15 @@ def add_partnership_type(payload: PartnershipTypeCreate, db: Session = Depends(g
     return item
 
 @router.get("/partnership-types", response_model=List[PartnershipTypeOut])
-def get_partnership_types(db: Session = Depends(get_db)):
+def get_partnership_types(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     # return db.query(PartnershipType).all()
     try:
-        partnership = db.query(PartnershipType).filter(PartnershipType.deleted_at == None).all()
+        partnership = db.query(PartnershipType).filter(PartnershipType.deleted_at.is_(None)).all()
         return partnership
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/partnership-types/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/partnership-types/{id}", dependencies=[Depends(require_writer)])
 def delete_partnership_type(id: int, db: Session = Depends(get_db)):
     item = db.query(PartnershipType).get(id)
     if not item:
@@ -56,7 +56,7 @@ def delete_partnership_type(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-@router.put("/partnership-types/{id}", response_model=PartnershipTypeOut, dependencies=[Depends(require_admin)])
+@router.put("/partnership-types/{id}", response_model=PartnershipTypeOut, dependencies=[Depends(require_writer)])
 def update_partnership_type(payload: PartnershipTypeCreate, id: int, db: Session = Depends(get_db)):
     item = db.query(PartnershipType).filter(PartnershipType.id == id).first()
     if not item:
@@ -72,7 +72,7 @@ def update_partnership_type(payload: PartnershipTypeCreate, id: int, db: Session
 # --------------------------------------------------
 # Funding Sources
 # --------------------------------------------------
-@router.post("/funding-sources", response_model=FundingSourceOut, dependencies=[Depends(require_admin)])
+@router.post("/funding-sources", response_model=FundingSourceOut, dependencies=[Depends(require_writer)])
 def add_funding_source(payload: FundingSourceCreate, db: Session = Depends(get_db)):
     item = FundingSource(**payload.dict())
     db.add(item)
@@ -81,14 +81,14 @@ def add_funding_source(payload: FundingSourceCreate, db: Session = Depends(get_d
     return item
 
 @router.get("/funding-sources", response_model=List[FundingSourceOut])
-def get_funding_sources(db: Session = Depends(get_db)):
+def get_funding_sources(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     try:
-        funding = db.query(FundingSource).filter(FundingSource.deleted_at == None).all()
+        funding = db.query(FundingSource).filter(FundingSource.deleted_at.is_(None)).all()
         return funding
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/funding-sources/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/funding-sources/{id}", dependencies=[Depends(require_writer)])
 def delete_funding_source(id: int, db: Session = Depends(get_db)):
     item = db.query(FundingSource).get(id)
     if not item:
@@ -97,7 +97,7 @@ def delete_funding_source(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-@router.put("/funding-sources/{id}", response_model=FundingSourceOut, dependencies=[Depends(require_admin)])
+@router.put("/funding-sources/{id}", response_model=FundingSourceOut, dependencies=[Depends(require_writer)])
 def update_funding_type(payload: FundingSourceCreate, id: int, db: Session = Depends(get_db)):
     item = db.query(FundingSource).filter(FundingSource.id == id).first()
     if not item:
@@ -115,7 +115,7 @@ def update_funding_type(payload: FundingSourceCreate, id: int, db: Session = Dep
 # --------------------------------------------------
 # Education Levels
 # --------------------------------------------------
-@router.post("/education-levels", response_model=EducationLevelOut, dependencies=[Depends(require_admin)])
+@router.post("/education-levels", response_model=EducationLevelOut, dependencies=[Depends(require_writer)])
 def add_education_level(payload: EducationLevelCreate, db: Session = Depends(get_db)):
     item = EducationLevel(**payload.dict())
     db.add(item)
@@ -124,15 +124,15 @@ def add_education_level(payload: EducationLevelCreate, db: Session = Depends(get
     return item
 
 @router.get("/education-levels", response_model=List[EducationLevelOut])
-def get_education_levels(db: Session = Depends(get_db)):
+def get_education_levels(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     try:
-        education_levels = db.query(EducationLevel).filter(EducationLevel.deleted_at == None).all()
+        education_levels = db.query(EducationLevel).filter(EducationLevel.deleted_at.is_(None)).all()
         return education_levels
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/education-levels/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/education-levels/{id}", dependencies=[Depends(require_writer)])
 def delete_education_level(id: int, db: Session = Depends(get_db)):
     item = db.query(EducationLevel).get(id)
     if not item:
@@ -141,7 +141,7 @@ def delete_education_level(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-@router.put("/education-levels/{id}", response_model=EducationLevelOut, dependencies=[Depends(require_admin)])
+@router.put("/education-levels/{id}", response_model=EducationLevelOut, dependencies=[Depends(require_writer)])
 def update_education_level(payload: EducationLevelCreate, id: int, db: Session = Depends(get_db)):
     item = db.query(EducationLevel).filter(EducationLevel.id == id).first()
     if not item:
@@ -157,7 +157,7 @@ def update_education_level(payload: EducationLevelCreate, id: int, db: Session =
 # --------------------------------------------------
 # Cultural Wealth Tags
 # --------------------------------------------------
-@router.post("/cultural-wealth-tags", response_model=CulturalWealthTagOut, dependencies=[Depends(require_admin)])
+@router.post("/cultural-wealth-tags", response_model=CulturalWealthTagOut, dependencies=[Depends(require_writer)])
 def add_cultural_wealth_tag(payload: CulturalWealthTagCreate, db: Session = Depends(get_db)):
     item = CulturalWealthTag(**payload.dict())
     db.add(item)
@@ -166,14 +166,14 @@ def add_cultural_wealth_tag(payload: CulturalWealthTagCreate, db: Session = Depe
     return item
 
 @router.get("/cultural-wealth-tags", response_model=List[CulturalWealthTagOut])
-def get_cultural_wealth_tags(db: Session = Depends(get_db)):
+def get_cultural_wealth_tags(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     try:
-        cultural_wealth = db.query(CulturalWealthTag).filter(CulturalWealthTag.deleted_at == None).all()
+        cultural_wealth = db.query(CulturalWealthTag).filter(CulturalWealthTag.deleted_at.is_(None)).all()
         return cultural_wealth
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/cultural-wealth-tags/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/cultural-wealth-tags/{id}", dependencies=[Depends(require_writer)])
 def delete_cultural_wealth_tag(id: int, db: Session = Depends(get_db)):
     item = db.query(CulturalWealthTag).get(id)
     if not item:
@@ -183,7 +183,7 @@ def delete_cultural_wealth_tag(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-@router.put("/cultural-wealth-tags/{id}", response_model=CulturalWealthTagOut, dependencies=[Depends(require_admin)])
+@router.put("/cultural-wealth-tags/{id}", response_model=CulturalWealthTagOut, dependencies=[Depends(require_writer)])
 def update_cultural_wealth_tag(payload: CulturalWealthTagCreate, id: int, db: Session = Depends(get_db)):
     item = db.query(CulturalWealthTag).filter(CulturalWealthTag.id == id).first()
     if not item:
@@ -199,7 +199,7 @@ def update_cultural_wealth_tag(payload: CulturalWealthTagCreate, id: int, db: Se
 # --------------------------------------------------
 # Locations
 # --------------------------------------------------
-@router.post("/locations", response_model=LocationOut, dependencies=[Depends(require_admin)])
+@router.post("/locations", response_model=LocationOut, dependencies=[Depends(require_writer)])
 def add_location(payload: LocationCreate, db: Session = Depends(get_db)):
     item = Location(**payload.dict())
     db.add(item)
@@ -208,10 +208,10 @@ def add_location(payload: LocationCreate, db: Session = Depends(get_db)):
     return item
 
 @router.get("/locations", response_model=List[LocationOut])
-def get_locations(db: Session = Depends(get_db)):
+def get_locations(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return db.query(Location).all()
 
-@router.delete("/locations/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/locations/{id}", dependencies=[Depends(require_writer)])
 def delete_location(id: int, db: Session = Depends(get_db)):
     item = db.query(Location).get(id)
     if not item:
@@ -224,7 +224,7 @@ def delete_location(id: int, db: Session = Depends(get_db)):
 # --------------------------------------------------
 # Activity Types
 # --------------------------------------------------
-@router.post("/activity-types", response_model=ActivityTypeOut, dependencies=[Depends(require_admin)])
+@router.post("/activity-types", response_model=ActivityTypeOut, dependencies=[Depends(require_writer)])
 def add_activity_type(payload: ActivityTypeCreate, db: Session = Depends(get_db)):
     item = ActivityType(**payload.dict())
     db.add(item)
@@ -233,15 +233,15 @@ def add_activity_type(payload: ActivityTypeCreate, db: Session = Depends(get_db)
     return item
 
 @router.get("/activity-types", response_model=List[ActivityTypeOut])
-def get_activity_types(db: Session = Depends(get_db)):
+def get_activity_types(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     # return db.query(ActivityType).all()
     try:
-        activityType = db.query(ActivityType).filter(ActivityType.deleted_at == None).all()
+        activityType = db.query(ActivityType).filter(ActivityType.deleted_at.is_(None)).all()
         return activityType
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/activity-types/{id}", dependencies=[Depends(require_admin)])
+@router.delete("/activity-types/{id}", dependencies=[Depends(require_writer)])
 def delete_activity_type(id: int, db: Session = Depends(get_db)):
     item = db.query(ActivityType).get(id)
     if not item:
@@ -251,7 +251,7 @@ def delete_activity_type(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Deleted"}
 
-@router.put("/activity-types/{id}", response_model=ActivityTypeOut, dependencies=[Depends(require_admin)])
+@router.put("/activity-types/{id}", response_model=ActivityTypeOut, dependencies=[Depends(require_writer)])
 def update_activity_type(payload: ActivityTypeCreate, id: int, db: Session = Depends(get_db)):
     item = db.query(ActivityType).filter(ActivityType.id == id).first()
     if not item:

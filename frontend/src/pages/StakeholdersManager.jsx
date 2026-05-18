@@ -4,8 +4,8 @@ import { API_BASE } from "../config";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { FaTrash, FaEdit } from "react-icons/fa";
 
-export default function StakeholdersManager({ accessToken }) {
-  const { isReadOnly } = useOutletContext() ?? {};
+export default function StakeholdersManager() {
+  const { isReadOnly, accessToken } = useOutletContext() ?? {};
   const headers = { Authorization: `Bearer ${accessToken}` };
 
   const [form, setForm] = useState({
@@ -41,6 +41,7 @@ export default function StakeholdersManager({ accessToken }) {
 
   /* Load reference data */
   useEffect(() => {
+    if (!accessToken) return;
     fetch(`${API_BASE}/misc/partnership-types`, { headers }).then(r => r.json()).then(setStakeholderTypes);
     fetch(`${API_BASE}/locations/states`, { headers }).then(r => r.json()).then(setStates);
     fetchStakeholders();

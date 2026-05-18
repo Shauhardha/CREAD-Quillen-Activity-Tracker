@@ -12,8 +12,8 @@ export default function AuthenticatedLayout({ onSignOut }) {
   useEffect(() => {
     async function loadSession() {
       const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
-      const payload = session.tokens?.accessToken?.payload;
+      const token = session.tokens?.idToken?.toString();
+      const payload = session.tokens?.idToken?.payload;
 
       setAccessToken(token);
       setGroups(payload?.["cognito:groups"] || []);

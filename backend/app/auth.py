@@ -21,8 +21,19 @@ JWKS_URL = f"{COGNITO_ISSUER}/.well-known/jwks.json"
 
 security = HTTPBearer()
 
-# Cache JWKS
-jwks = requests.get(JWKS_URL).json()
+# JWKS cache — refreshed automatically when Cognito rotates signing keys
+_jwks_cache = None
+
+def _get_jwks():
+    global _jwks_cache
+    if _jwks_cache is None:
+        _jwks_cache = requests.get(JWKS_URL).json()
+    return _jwks_cache
+
+def _refresh_jwks():
+    global _jwks_cache
+    _jwks_cache = requests.get(JWKS_URL).json()
+    return _jwks_cache
 
 
 def verify_jwt(
@@ -32,9 +43,20 @@ def verify_jwt(
 
     try:
         header = jwt.get_unverified_header(token)
-        key = next(
-            k for k in jwks["keys"] if k["kid"] == header["kid"]
-        )
+        kid = header["kid"]
+
+        # Try cached JWKS first; refresh if kid not found (handles key rotation)
+        jwks = _get_jwks()
+        key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+        if key is None:
+            jwks = _refresh_jwks()
+            key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+        if key is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token key",
+            )
+
         public_key = RSAAlgorithm.from_jwk(json.dumps(key))
         payload = jwt.decode(
             token,
@@ -46,17 +68,12 @@ def verify_jwt(
 
         return payload
 
-    except StopIteration:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token key",
-        )
-
-    except JWTError as e:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token validation failed",
         )
+
 
 def get_current_user(payload=Depends(verify_jwt)):
     return {
@@ -72,5 +89,15 @@ def require_admin(user=Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
+        )
+    return user
+
+
+def require_writer(user=Depends(get_current_user)):
+    """Blocks read_only users from all write operations. Allows admin and staff."""
+    if "read_only" in user["groups"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Write access required",
         )
     return user

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import listPlugin from "@fullcalendar/list";
@@ -54,6 +54,7 @@ const daysUntil = (dateStr) => {
 /* ═══════════════════════════════════════════════════════════════ */
 export default function ActivityCalendar() {
   const navigate = useNavigate();
+  const { accessToken } = useOutletContext() ?? {};
 
   const [activities,       setActivities]       = useState([]);
   const [milestoneMarkers, setMilestoneMarkers] = useState([]);
@@ -67,13 +68,15 @@ export default function ActivityCalendar() {
 
   /* ── Fetch ───────────────────────────────────────────────────── */
   useEffect(() => {
+    if (!accessToken) return;
+    const headers = { Authorization: `Bearer ${accessToken}` };
     Promise.all([
-      fetch(`${API_BASE}/dashboard/calendar-activities`).then((r) => {
+      fetch(`${API_BASE}/dashboard/calendar-activities`, { headers }).then((r) => {
         if (!r.ok) throw new Error("Failed to load activities");
         return r.json();
       }),
-      fetch(`${API_BASE}/milestones/calendar`).then((r) => r.json()).catch(() => []),
-      fetch(`${API_BASE}/initiatives/`).then((r) => r.json()).catch(() => []),
+      fetch(`${API_BASE}/milestones/calendar`, { headers }).then((r) => r.json()).catch(() => []),
+      fetch(`${API_BASE}/initiatives/`,        { headers }).then((r) => r.json()).catch(() => []),
     ])
       .then(([acts, mils, inits]) => {
         setActivities(Array.isArray(acts) ? acts : []);
@@ -82,7 +85,7 @@ export default function ActivityCalendar() {
       })
       .catch(() => setError("Unable to load calendar data."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [accessToken]);
 
   const TODAY = new Date().toISOString().slice(0, 10);
 

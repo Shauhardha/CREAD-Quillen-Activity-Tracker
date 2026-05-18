@@ -7,14 +7,14 @@ from app.database import get_db
 from app.models.milestone import Milestone
 from app.models.activity import Activity
 from app.schemas.milestone import MilestoneCreate, MilestoneOut
-from app.auth import get_current_user
+from app.auth import get_current_user, require_writer
 
 router = APIRouter(prefix="/api/milestones", tags=["Milestones"])
 
 
 # ── All milestones with due dates (for calendar view) ────────────
 @router.get("/calendar")
-def milestones_for_calendar(db: Session = Depends(get_db)):
+def milestones_for_calendar(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     results = (
         db.query(Milestone, Activity.title.label("activity_title"), Activity.initiative_id)
         .join(Activity, Activity.id == Milestone.activity_id)
@@ -41,7 +41,7 @@ def milestones_for_calendar(db: Session = Depends(get_db)):
 
 # ── List milestones for an activity ──────────────────────────────
 @router.get("/", response_model=List[MilestoneOut])
-def get_milestones(activity_id: int, db: Session = Depends(get_db)):
+def get_milestones(activity_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return (
         db.query(Milestone)
         .filter(Milestone.activity_id == activity_id, Milestone.deleted_at.is_(None))
@@ -56,7 +56,7 @@ def create_milestone(
     activity_id: int,
     payload: MilestoneCreate,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_writer),
 ):
     milestone = Milestone(activity_id=activity_id, **payload.dict())
     db.add(milestone)
@@ -70,7 +70,7 @@ def create_milestone(
 def toggle_achieved(
     id: int,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_writer),
 ):
     milestone = db.query(Milestone).filter(Milestone.id == id).first()
     if not milestone:
@@ -90,7 +90,7 @@ def toggle_achieved(
 def delete_milestone(
     id: int,
     db: Session = Depends(get_db),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_writer),
 ):
     milestone = db.query(Milestone).filter(Milestone.id == id).first()
     if not milestone:

@@ -12,7 +12,11 @@ DATABASE_URL = (
     f"{os.getenv('DB_NAME')}"
 )
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"ssl": {"ssl_disabled": False}},  # Enforce SSL for RDS connections
+)
 
 SessionLocal = sessionmaker(
     autocommit=False,
